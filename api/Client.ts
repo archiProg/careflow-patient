@@ -1,11 +1,11 @@
-import { API_URL } from "@/constants/host";
+import Provider from "@/services/providerService";
 import { ApiResponseModel } from "@/types/ApiResponseModel";
 import axios, { AxiosRequestConfig } from "axios";
 import { Platform } from "react-native";
 
 /* ================= Axios Instance ================= */
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: Provider.API_URL ,
   timeout: 15000,
 });
 

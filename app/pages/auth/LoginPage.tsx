@@ -2,8 +2,14 @@ import LoginCardComp from "@/components/LoginCardComp";
 import LoginFaceComp from "@/components/LoginFaceComp";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import { Pressable, Text, useColorScheme, View } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  BackHandler,
+  Pressable,
+  Text,
+  useColorScheme,
+  View,
+} from "react-native";
 
 const LoginPage = () => {
   const router = useRouter();
@@ -25,6 +31,24 @@ const LoginPage = () => {
   const handleBack = () => {
     setStatePage("main");
   };
+
+  useEffect(() => {
+    const backAction = () => {
+      if (statePage == "main") {
+        return false;
+      } else {
+        setStatePage("main");
+        return true;
+      }
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction,
+    );
+
+    return () => backHandler.remove();
+  }, [statePage]);
 
   return (
     <View className="flex-1">
