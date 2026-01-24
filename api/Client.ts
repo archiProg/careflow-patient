@@ -1,262 +1,148 @@
+import { API_URL } from "@/constants/host";
 import { ApiResponseModel } from "@/types/ApiResponseModel";
 import { JWT } from "@/utils/jwt";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios, { AxiosRequestConfig } from "axios";
 import { Platform } from "react-native";
 
+/* ================= Axios Instance ================= */
+const api = axios.create({
+  baseURL: API_URL,
+  timeout: 15000,
+});
 
-export class RequestApi {
-    baseUrl: string = process.env.API_URL || "";
+/* ================= JWT ================= */
+export const refreshJwt = async (): Promise<boolean> => {
+  const email = await AsyncStorage.getItem("email");
+  const password = await AsyncStorage.getItem("password");
 
-    async jwt() {
-        const email = await AsyncStorage.getItem("email");
-        const password = await AsyncStorage.getItem("password");
-        if (!email || !password) {
-            return false;
-        }
-        let body =
-        {
-            email: email,
-            password: password,
-        };
+  if (!email || !password) return false;
 
-        let res = await this.postApi("/login", JSON.stringify(body));
-        if (res.success) {
-            let jwt = JSON.parse(res.response);
+  try {
+    const res = await api.post("/login", { email, password });
+    if (res.data?.token) {
+      JWT.setToken(res.data.token);
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+};
 
-            if (jwt.token) {
-                JWT.setToken(jwt.token);
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
-        else {
-            return false;
-        }
+/* ================= Helper ================= */
+const buildFormData = (files?: Record<string, string>) => {
+  if (!files) return null;
 
+  const formData = new FormData();
+  for (const key in files) {
+    formData.append(key, {
+      uri: Platform.OS === "ios" ? files[key] : `file://${files[key]}`,
+      type: "application/octet-stream",
+      name: key,
+    } as any);
+  }
+  return formData;
+};
+
+/* ================= POST ================= */
+export const postApi = async (
+  endpoint: string,
+  jsonData: string = "",
+  headers?: Record<string, string>,
+  files?: Record<string, string>,
+): Promise<ApiResponseModel> => {
+  const result: ApiResponseModel = { success: false, response: "" };
+
+  try {
+    let data: any;
+    let config: AxiosRequestConfig = { headers: { ...headers } };
+
+    if (files) {
+      data = buildFormData(files);
+      config.headers!["Content-Type"] = "multipart/form-data";
+    } else if (jsonData) {
+      data = JSON.parse(jsonData);
+      config.headers!["Content-Type"] = "application/json";
     }
 
-    public async postApiJwt(
-        endpoint: string,
-        jsonData: string = "",
-        headers?: Record<string, string>,
-        files?: Record<string, string>
-    ): Promise<ApiResponseModel> {
-        const ApiResponseModel: ApiResponseModel = { success: false, response: "" };
-        if (JWT.expire == 0 || JWT.expire <= Date.now() / 1000) {
+    const res = await api.post(endpoint, data, config);
+    result.success = true;
+    result.response = JSON.stringify(res.data);
+    return result;
+  } catch (err: any) {
+    result.response = err.response
+      ? `Error ${err.response.status}: ${JSON.stringify(err.response.data)}`
+      : `Exception: ${err.message}`;
+    return result;
+  }
+};
 
-            const status = await this.jwt();
-            if (!status) {
-                ApiResponseModel.response = "JWT Error";
-                return ApiResponseModel;
-            }
-        }
+/* ================= POST JWT ================= */
+export const postApiJwt = async (
+  endpoint: string,
+  jsonData: string = "",
+  headers?: Record<string, string>,
+  files?: Record<string, string>,
+): Promise<ApiResponseModel> => {
+  const result: ApiResponseModel = { success: false, response: "" };
 
-        const bearerToken = JWT.token;
-
-        try {
-            let body: FormData | string = "";
-
-            if (files && Object.keys(files).length > 0) {
-                const formData = new FormData();
-
-                for (const key in files) {
-                    formData.append(key, {
-                        uri: Platform.OS === "ios" ? files[key] : "file://" + files[key],
-                        type: "application/octet-stream",
-                        name: key,
-                    } as any);
-                }
-
-                if (headers) {
-                    for (const key in headers) {
-                        formData.append(key, headers[key]);
-                    }
-                }
-
-                body = formData;
-            } else if (jsonData != "") {
-                body = jsonData;
-            }
-
-            const response = await fetch(`${this.baseUrl}${endpoint}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": files ? "multipart/form-data" : "application/json",
-                    ...headers,
-                    Authorization: `Bearer ${bearerToken}`,
-                },
-                body,
-            });
-
-            const contentType = response.headers.get("content-type") || "";
-
-            let responseData: string = "";
-
-            responseData = await response.text();
-
-            if (response.status === 500) {
-                ApiResponseModel.success = false;
-                ApiResponseModel.response = "Server error (500): " + responseData;
-            } else if (response.ok || response.status === 401) {
-                ApiResponseModel.success = true;
-                ApiResponseModel.response = responseData;
-            } else {
-                ApiResponseModel.success = false;
-                ApiResponseModel.response = `Error ${response.status}: ${responseData}`;
-            }
-
-            return ApiResponseModel;
-        } catch (error: any) {
-            ApiResponseModel.success = false;
-            ApiResponseModel.response = `Exception: ${error.message}`;
-            return ApiResponseModel;
-        }
+  if (JWT.expire === 0 || JWT.expire <= Date.now() / 1000) {
+    const ok = await refreshJwt();
+    if (!ok) {
+      result.response = "JWT Error";
+      return result;
     }
+  }
 
-    public async postApi(
-        endpoint: string,
-        jsonData: string = "",
-        headers?: Record<string, string>,
-        files?: Record<string, string>
-    ): Promise<ApiResponseModel> {
-        const ApiResponseModel: ApiResponseModel = { success: false, response: "" };
+  return postApi(
+    endpoint,
+    jsonData,
+    {
+      ...headers,
+      Authorization: `Bearer ${JWT.token}`,
+    },
+    files,
+  );
+};
 
-        try {
-            let body: FormData | string = "";
+/* ================= GET ================= */
+export const getApi = async (
+  endpoint: string,
+  headers?: Record<string, string>,
+): Promise<ApiResponseModel> => {
+  const result: ApiResponseModel = { success: false, response: "" };
 
-            if (files && Object.keys(files).length > 0) {
-                const formData = new FormData();
+  try {
+    const res = await api.get(endpoint, { headers });
+    result.success = true;
+    result.response = JSON.stringify(res.data);
+    return result;
+  } catch (err: any) {
+    result.response = err.response
+      ? `Error ${err.response.status}: ${JSON.stringify(err.response.data)}`
+      : `Exception: ${err.message}`;
+    return result;
+  }
+};
 
-                for (const key in files) {
-                    formData.append(key, {
-                        uri: Platform.OS === "ios" ? files[key] : "file://" + files[key],
-                        type: "application/octet-stream",
-                        name: key,
-                    } as any);
-                }
+/* ================= GET JWT ================= */
+export const getApiJwt = async (
+  endpoint: string,
+  headers?: Record<string, string>,
+): Promise<ApiResponseModel> => {
+  const result: ApiResponseModel = { success: false, response: "" };
 
-                if (headers) {
-                    for (const key in headers) {
-                        formData.append(key, headers[key]);
-                    }
-                }
-
-                body = formData;
-            } else if (jsonData != "") {
-                body = jsonData;
-            }
-
-            const response = await fetch(`${this.baseUrl}${endpoint}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": files ? "multipart/form-data" : "application/json",
-                    ...headers,
-                },
-                body,
-            });
-
-            let responseData: string = "";
-
-            responseData = await response.text();
-
-            if (response.status === 500) {
-                ApiResponseModel.success = false;
-                ApiResponseModel.response = "Server error (500): " + responseData;
-            } else if (response.ok || response.status === 401) {
-                ApiResponseModel.success = true;
-                ApiResponseModel.response = responseData;
-            } else {
-                ApiResponseModel.success = false;
-                ApiResponseModel.response = `Error ${response.status}: ${responseData}`;
-            }
-
-            return ApiResponseModel;
-        } catch (error: any) {
-            ApiResponseModel.success = false;
-            ApiResponseModel.response = `Exception: ${error.message}`;
-            return ApiResponseModel;
-        }
+  if (JWT.expire === 0 || JWT.expire <= Date.now() / 1000) {
+    const ok = await refreshJwt();
+    if (!ok) {
+      result.response = "JWT Error";
+      return result;
     }
+  }
 
-    public async getApi(
-        endpoint: string,
-        headers?: Record<string, string>
-    ): Promise<ApiResponseModel> {
-        const ApiResponseModel: ApiResponseModel = { success: false, response: "" };
-
-        try {
-            const response = await fetch(`${this.baseUrl}${endpoint}`, {
-                method: "GET",
-                headers,
-            });
-
-            let responseData: string = "";
-
-            responseData = await response.text();
-
-            if (response.ok) {
-                ApiResponseModel.success = true;
-                ApiResponseModel.response = responseData;
-            } else {
-                ApiResponseModel.success = false;
-                ApiResponseModel.response = `Error ${response.status}: ${responseData}`;
-            }
-
-            return ApiResponseModel;
-        } catch (error: any) {
-            ApiResponseModel.success = false;
-            ApiResponseModel.response = `Exception: ${error.message}`;
-            return ApiResponseModel;
-        }
-    }
-
-    public async getApiJwt(
-        endpoint: string,
-        headers?: Record<string, string>
-    ): Promise<ApiResponseModel> {
-        const ApiResponseModel: ApiResponseModel = { success: false, response: "" };
-
-        if (JWT.expire == 0 || JWT.expire <= Date.now() / 1000) {
-            const status = await this.jwt();
-            if (!status) {
-                ApiResponseModel.response = "JWT Error";
-                return ApiResponseModel;
-            }
-        }
-
-        const bearerToken = JWT.token;
-
-        try {
-            const response = await fetch(`${this.baseUrl}${endpoint}`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    ...headers,
-                    Authorization: `Bearer ${bearerToken}`,
-                },
-            });
-
-            let responseData: string = "";
-
-            responseData = await response.text();
-
-            if (response.ok) {
-                ApiResponseModel.success = true;
-                ApiResponseModel.response = responseData;
-            } else {
-                ApiResponseModel.success = false;
-                ApiResponseModel.response = `Error ${response.status}: ${responseData}`;
-            }
-
-            return ApiResponseModel;
-        } catch (error: any) {
-            ApiResponseModel.success = false;
-            ApiResponseModel.response = `Exception: ${error.message}`;
-            return ApiResponseModel;
-        }
-    }
-}
-
-export const Api = new RequestApi();
+  return getApi(endpoint, {
+    ...headers,
+    Authorization: `Bearer ${JWT.token}`,
+  });
+};

@@ -1,4 +1,6 @@
 export interface LoginPayloadModel {
-    email: string;
-    password: string;
+  action?: string;
+  content?: {
+    id_card?: string;
+  };
 }

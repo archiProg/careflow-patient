@@ -1,5 +1,5 @@
-import { LoginPayloadModel } from '../types/LoginPayloadModel';
-import { Api } from './Client';
+import { LoginPayloadModel } from "../types/LoginPayloadModel";
+import { postApi } from "./Client";
 
-export const loginApi = (payload: LoginPayloadModel) =>
-    Api.postApi('/auth', JSON.stringify(payload));
+export const loginIdCardApi = (payload: LoginPayloadModel) =>
+  postApi("/loginfaceid", JSON.stringify(payload));
