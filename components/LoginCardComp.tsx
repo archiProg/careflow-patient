@@ -1,13 +1,16 @@
 import { loginIdCardApi } from "@/api/AuthApi";
+import Provider from "@/services/providerService";
 import { setToken } from "@/store/authSlice";
 import { LoginResponseModel } from "@/types/LoginModel";
 import { Dispatch } from "@reduxjs/toolkit";
 import { useRouter } from "expo-router";
-import { Alert, Pressable, Text, View } from "react-native";
+import { useState } from "react";
+import { Alert, Pressable, Text, TextInput, View } from "react-native";
 import { useDispatch } from "react-redux";
+
 const LoginCardComp = () => {
   const router = useRouter();
-
+  const [idCard, setIDCard] = useState("1609900493012");
   const dispatch: Dispatch = useDispatch();
 
   const handleLogin = async () => {
@@ -15,7 +18,7 @@ const LoginCardComp = () => {
       const payload = {
         action: "id_card",
         content: {
-          id_card: "1609900493012",
+          id_card: idCard,
         },
       };
       let getResponse: LoginResponseModel;
@@ -23,9 +26,10 @@ const LoginCardComp = () => {
       const response = await loginIdCardApi(payload);
       if (response.success) {
         getResponse = JSON.parse(response.response);
-        dispatch(setToken(getResponse.token));
         if (getResponse.token) {
-          router.replace("/pages/main/HomePage");
+          dispatch(setToken(getResponse.token));
+          Provider.setToken(getResponse.token);
+          router.back();
         } else {
           Alert.alert("Login failed", "Please try again");
         }
@@ -44,6 +48,19 @@ const LoginCardComp = () => {
           <Text className="text-xl font-semibold text-center text-black/80 dark:text-gray-500">
             Login with ID Card
           </Text>
+          <View className="w-full">
+            <Text className="text-md font-bold text-black my-[16px] dark:text-white">
+              ID Card
+            </Text>
+            <TextInput
+              className="h-[56px] mb-[16px] rounded-[24px]  border-[1px] border-gray-900 focus:border-[#2196F3] focus:outline-none focus:ring-1 focus:ring-[#2196F3] placeholder:text-gray-400 p-4 
+                dark:border-gray-200 dark:text-white"
+              placeholder="ID Card"
+              keyboardType="numeric"
+              value={idCard}
+              onChangeText={setIDCard}
+            />
+          </View>
         </View>
       </View>
       <View className="w-full h-1/2 items-center justify-center mb-10">

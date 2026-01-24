@@ -3,6 +3,7 @@ import { loadLanguage } from "@/hooks/useI18n";
 import { RootState } from "@/store";
 import { clearAll } from "@/store/authSlice";
 import { getJwtExp } from "@/utils/jwt";
+import { getSocket } from "@/utils/socket";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import { View } from "react-native";
@@ -19,16 +20,23 @@ export default function StartupPage() {
     if (token) {
       if (getJwtExp(token) <= Date.now() / 1000) {
         clearAll();
-        router.replace("/pages/auth/LoginPage");
+        router.push("/pages/auth/LoginPage");
+      } else {
+        router.replace("/pages/main/HomePage");
       }
-      router.replace("/pages/main/HomePage");
     } else {
-      router.replace("/pages/auth/LoginPage");
+      router.push("/pages/auth/LoginPage");
     }
   };
 
   useEffect(() => {
     initApp();
+  }, [token]);
+
+  useEffect(() => {
+    if (token) {
+      getSocket();
+    }
   }, [token]);
 
   return (
