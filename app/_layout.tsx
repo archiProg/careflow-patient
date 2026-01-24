@@ -1,4 +1,3 @@
-
 import { store } from "@/store/index";
 import { Slot } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -7,7 +6,6 @@ import { Provider } from "react-redux";
 import "./global.css";
 
 const RootLayout = () => {
-
   return (
     <Provider store={store}>
       <View className="flex-1 bg-white dark:bg-gray-900">
@@ -18,6 +16,6 @@ const RootLayout = () => {
       </View>
     </Provider>
   );
-}
+};
 
 export default RootLayout;

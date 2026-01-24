@@ -1,7 +1,5 @@
 import { API_URL } from "@/constants/host";
 import { ApiResponseModel } from "@/types/ApiResponseModel";
-import { JWT } from "@/utils/jwt";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios, { AxiosRequestConfig } from "axios";
 import { Platform } from "react-native";
 
@@ -10,25 +8,6 @@ const api = axios.create({
   baseURL: API_URL,
   timeout: 15000,
 });
-
-/* ================= JWT ================= */
-export const refreshJwt = async (): Promise<boolean> => {
-  const email = await AsyncStorage.getItem("email");
-  const password = await AsyncStorage.getItem("password");
-
-  if (!email || !password) return false;
-
-  try {
-    const res = await api.post("/login", { email, password });
-    if (res.data?.token) {
-      JWT.setToken(res.data.token);
-      return true;
-    }
-    return false;
-  } catch {
-    return false;
-  }
-};
 
 /* ================= Helper ================= */
 const buildFormData = (files?: Record<string, string>) => {
@@ -82,25 +61,18 @@ export const postApi = async (
 export const postApiJwt = async (
   endpoint: string,
   jsonData: string = "",
+  token: string,
   headers?: Record<string, string>,
   files?: Record<string, string>,
 ): Promise<ApiResponseModel> => {
   const result: ApiResponseModel = { success: false, response: "" };
-
-  if (JWT.expire === 0 || JWT.expire <= Date.now() / 1000) {
-    const ok = await refreshJwt();
-    if (!ok) {
-      result.response = "JWT Error";
-      return result;
-    }
-  }
 
   return postApi(
     endpoint,
     jsonData,
     {
       ...headers,
-      Authorization: `Bearer ${JWT.token}`,
+      Authorization: `Bearer ${token}`,
     },
     files,
   );
@@ -129,20 +101,13 @@ export const getApi = async (
 /* ================= GET JWT ================= */
 export const getApiJwt = async (
   endpoint: string,
+  token: string,
   headers?: Record<string, string>,
 ): Promise<ApiResponseModel> => {
   const result: ApiResponseModel = { success: false, response: "" };
 
-  if (JWT.expire === 0 || JWT.expire <= Date.now() / 1000) {
-    const ok = await refreshJwt();
-    if (!ok) {
-      result.response = "JWT Error";
-      return result;
-    }
-  }
-
   return getApi(endpoint, {
     ...headers,
-    Authorization: `Bearer ${JWT.token}`,
+    Authorization: `Bearer ${token}`,
   });
 };
