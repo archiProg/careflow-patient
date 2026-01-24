@@ -1,16 +1,14 @@
-import { API_URL } from "@/constants/host";
-import { RootState } from "@/store";
-import { useSelector } from "react-redux";
+import Provider from "@/services/providerService";
 import { io, Socket } from "socket.io-client";
+
 let socket: Socket | null = null;
 
 export const getSocket = (): Socket => {
-  const { token } = useSelector((state: RootState) => state.auth);
   if (!socket) {
-    socket = io(API_URL, {
+    socket = io(Provider.SOCKETIO_URL, {
       transports: ["websocket"],
       extraHeaders: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${Provider.Token}`,
       },
       reconnection: true,
       reconnectionAttempts: 10,
