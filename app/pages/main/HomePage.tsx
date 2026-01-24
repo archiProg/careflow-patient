@@ -1,20 +1,25 @@
 import { authenMeApi } from "@/api/AuthApi";
+import LoadingComp from "@/components/LoadingComp";
+import Provider from "@/services/providerService";
+import { ProfileModel } from "@/types/ProfileModel";
 import { useRouter } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Alert, Text, View } from "react-native";
-import { useSelector } from "react-redux";
 
 const HomePage = () => {
-  const token = useSelector((state: any) => state.auth.token);
-
+  const token = Provider.Token;
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const handleAuthenMe = async () => {
+    setLoading(true);
     try {
       const response = await authenMeApi(token);
+      let getResponse: ProfileModel;
       if (response.success) {
         if (response.response) {
-          console.log(response.response);
+          getResponse = JSON.parse(response.response);
+          Provider.setProfile(getResponse);
         } else {
           Alert.alert("Authen failed", "Please try again");
           router.replace("/pages/auth/LoginPage");
@@ -26,6 +31,8 @@ const HomePage = () => {
     } catch (error: any) {
       Alert.alert("Authen failed", "Please try again");
       router.replace("/pages/auth/LoginPage");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -34,8 +41,12 @@ const HomePage = () => {
   }, []);
 
   return (
-    <View>
-      <Text>HomePage</Text>
+    <View className="flex-1 items-center justify-center">
+      {loading ? (
+        <LoadingComp></LoadingComp>
+      ) : (
+        <Text>{Provider.Profile?.name}</Text>
+      )}
     </View>
   );
 };
