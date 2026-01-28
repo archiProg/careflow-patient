@@ -11,4 +11,4 @@ export const registerApi = (payload: RegisterPayloadModel) =>
   postApi("/register", "", payload.head, payload.file);
 
 export const checkEmailApi = (payload: { email: string }) =>
-  postApi("/check-email", payload);
+  postApi("/check-email", JSON.stringify(payload));
