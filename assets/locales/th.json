@@ -111,5 +111,11 @@
   "all": "ทั้งหมด",
   "placeholder-searchHistory": "ค้นหาชื่อผู้ป่วย, อาการ, การวินิจฉัย...",
   "doctor-check": "หมอผู้ตรวจ",
-  "patient": "ผู้ป่วย"
+  "patient": "ผู้ป่วย",
+  "home-screen-id-card": "เลขบัตรประชาชน",
+  "home-screen-blood-type": "กรุ๊ปเลือด",
+  "home-screen-birthday": "วันเกิด",
+  "search-doctor": "ค้นหาแพทย์",
+  "search-doctor-description": "ค้นหาแพทย์ผู้เชี่ยวชาญตามความต้องการของคุณ",
+  "search": "ค้นหา"
 }

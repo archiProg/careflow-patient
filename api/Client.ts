@@ -5,7 +5,7 @@ import { Platform } from "react-native";
 
 /* ================= Axios Instance ================= */
 const api = axios.create({
-  baseURL: Provider.API_URL,
+  baseURL: Provider.HostAPI_URL,
   timeout: 60000,
 });
 
@@ -32,10 +32,6 @@ export const postApi = async (
   files?: Record<string, string>,
 ): Promise<ApiResponseModel> => {
   const result: ApiResponseModel = { success: false, response: "", code: 500 };
-  console.log("headers", headers);
-  console.log("jsonData", jsonData);
-  console.log("files", files);
-  console.log("endpoint", endpoint);
   try {
     let data: any;
     let config: AxiosRequestConfig = { headers: { ...headers } };

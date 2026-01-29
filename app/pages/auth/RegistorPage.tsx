@@ -292,7 +292,6 @@ const RegisterPage = () => {
                                     <Text className="mb-2 text-lg font-bold text-black dark:text-white">
                                         Date of birth
                                     </Text>
-
                                     <Pressable onPress={() => setShow(true)}>
                                         <View
                                             className="h-[56px] rounded-[24px] border-[1px] border-gray-900 focus:border-[#2196F3] focus:outline-none focus:ring-1 focus:ring-[#2196F3] placeholder:text-gray-400 p-4 

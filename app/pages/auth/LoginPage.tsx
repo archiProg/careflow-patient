@@ -91,9 +91,9 @@ const LoginPage = () => {
       )}
       {statePage === "idCard" && (
         <View className="flex-1 w-full h-full px-4">
-          <View className="flex w-full py-4 justify-start items-start">
+          <View className="flex flex-row w-full py-4 pb-6 justify-between items-center">
             <Pressable
-              className="flex-row items-center justify-start px-3 rounded-full"
+              className=" flex-row items-center justify-start px-3 rounded-full"
               onPress={() => {
                 handleBack();
               }}
@@ -105,6 +105,10 @@ const LoginPage = () => {
                 color={colorScheme === "dark" ? "#fff" : "#000"}
               />
             </Pressable>
+            <Text className="text-xl font-semibold text-center text-black/80 dark:text-gray-500">
+              Login with ID Card
+            </Text>
+            <View className="w-[36px]" />
           </View>
           <LoginCardComp />
         </View>

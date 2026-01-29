@@ -111,5 +111,11 @@
   "sendedHospital": "Send to Hospital",
   "all": "All",
   "placeholder-searchHistory": "Search patient name, symptoms, diagnosis...",
-  "doctor-check": "Examining Doctor"
+  "doctor-check": "Examining Doctor",
+  "home-screen-id-card": "ID Card",
+  "home-screen-blood-type": "Blood Type",
+  "home-screen-birthday": "Birthday",
+  "search-doctor": "Search Doctor",
+  "search-doctor-description": "Find a specialist doctor based on your needs",
+  "search": "Search"
 }
