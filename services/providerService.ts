@@ -1,4 +1,4 @@
-import { DoctorSpecialtyModel } from "@/types/DoctorSpecialtyModel";
+import { DoctorConsultModel } from "@/types/DoctorConsultModel";
 import { ProfileModel } from "@/types/ProfileModel";
 
 class Provider {
@@ -6,14 +6,14 @@ class Provider {
   static SOCKETIO_URL: string = "https://archismartsolution.com:5004";
   static Token: string = "";
   static Profile: ProfileModel | null = null;
-  static DoctorSpecialty: DoctorSpecialtyModel[] = [];
+  static DoctorSpecialty: DoctorConsultModel[] = [];
   static setToken(token: string) {
     this.Token = token;
   }
   static setProfile(profile: ProfileModel | null) {
     this.Profile = profile;
   }
-  static setDoctorSpecialty(doctorSpecialty: DoctorSpecialtyModel[]) {
+  static setDoctorSpecialty(doctorSpecialty: DoctorConsultModel[]) {
     this.DoctorSpecialty = doctorSpecialty;
   }
 }

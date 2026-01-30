@@ -31,24 +31,43 @@ export const getSocket = (): Socket => {
   return socket;
 };
 
-export const listenSocket = (events: {
-  [event: string]: (...args: any[]) => void;
-}) => {
+export const listenSocket = <
+  T extends Record<string, (...args: any[]) => void>
+>(
+  events: T
+) => {
   const s = getSocket();
+
   Object.entries(events).forEach(([event, callback]) => {
     s.on(event, callback);
   });
+
+  return () => {
+    Object.entries(events).forEach(([event, callback]) => {
+      s.off(event, callback);
+    });
+  };
 };
 
 export const offSocket = (event: string) => {
   socket?.off(event);
 };
 
-export const emitSocket = (event: string, data?: any) => {
+export const emitSocket = <TAck = any>(
+  event: string,
+  data?: any
+): Promise<TAck> => {
   const s = getSocket();
   console.log("emitSocket", event, data);
 
-  s.emit(event, data);
+  return new Promise((resolve, reject) => {
+    s.emit(event, data, (ack: TAck) => {
+      resolve(ack);
+    });
+
+    // (optional) กันกรณี socket หลุด
+    // setTimeout(() => reject(new Error("Socket timeout")), 10000);
+  });
 };
 
 export const closeSocket = () => {

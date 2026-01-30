@@ -2,7 +2,7 @@ import { Pressable, Text, View } from "react-native";
 
 const ActionCard = ({ title, description, textButton, onPress }: { title: string, description: string, textButton: string, onPress: () => void }) => {
     return (
-        <View className="w-full py-8 px-6 bg-blue-500 rounded-[24px] shadow-md dark:bg-blue-600 dark:shadow-blue-600">
+        <View className="w-full py-8 px-6 bg-blue-500 rounded-xl shadow-md dark:bg-blue-600 dark:shadow-blue-600">
             <Text className="text-xl font-bold text-white dark:text-white">{title}</Text>
             <View className="max-w-48 mt-2">
                 <Text className="text-md w-max-24 text-white dark:text-white">{description}</Text>

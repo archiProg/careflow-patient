@@ -42,7 +42,7 @@ const HomePage = () => {
 
           {/* Profile Card */}
           <View
-            className={`${CARD.body} bg-white border-gray-100 dark:bg-gray-800 dark:border-gray-800 shadow-md`}
+            className={`${CARD.body} bg-white border-gray-100 dark:bg-gray-700 dark:border-gray-700 shadow-md`}
           >
             <View className="flex-row items-center">
               {/* Profile Image */}

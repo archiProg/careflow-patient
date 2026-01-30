@@ -117,5 +117,9 @@
   "home-screen-birthday": "วันเกิด",
   "search-doctor": "ค้นหาแพทย์",
   "search-doctor-description": "ค้นหาแพทย์ผู้เชี่ยวชาญตามความต้องการของคุณ",
-  "search": "ค้นหา"
+  "search": "ค้นหา",
+  "select_specialty_to_consult": "เลือกสาขาที่ต้องการปรึกษา",
+  "find_doctor": "ค้นหาแพทย์",
+  "finding_doctor": "กำลังค้นหาแพทย์",
+  "find_doctor_description": "กรุณารอสักครู่"
 }

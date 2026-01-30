@@ -117,5 +117,11 @@
   "home-screen-birthday": "Birthday",
   "search-doctor": "Search Doctor",
   "search-doctor-description": "Find a specialist doctor based on your needs",
-  "search": "Search"
+  "search": "Search",
+  "select_specialty_to_consult": "Select Specialty to Consult",
+  "find_doctor": "Find Doctor",
+  "finding_doctor": "Finding Doctor",
+  "find_doctor_description": "Please wait a moment",
+  "finded_doctor": "Finded Doctor",
+  "finded_doctor_description": "Please wait a moment"
 }

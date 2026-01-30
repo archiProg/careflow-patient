@@ -3,7 +3,7 @@ import { getDoctorSpecialty } from "@/api/UserApi";
 import LoadingComp from "@/components/LoadingComp";
 import { loadLanguage } from "@/hooks/useI18n";
 import Provider from "@/services/providerService";
-import { DoctorSpecialtyModel } from "@/types/DoctorSpecialtyModel";
+import { DoctorSpecialtyModel } from "@/types/DoctorConsultModel";
 import { ProfileModel } from "@/types/ProfileModel";
 import { getJwtExp } from "@/utils/jwt";
 import { closeSocket, getSocket } from "@/utils/socket";
