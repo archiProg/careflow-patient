@@ -31,6 +31,13 @@ export const getSocket = (): Socket => {
   return socket;
 };
 
+
+export const isSocketConnected = () => {
+  if (!socket) return false;
+  return socket.connected;
+};
+
+
 export const listenSocket = <
   T extends Record<string, (...args: any[]) => void>
 >(

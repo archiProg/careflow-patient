@@ -7,12 +7,13 @@ import Provider from "@/services/providerService";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { addPeer, removePeer, updatePeerMedia } from "@/store/peerSlice";
 import { UserConnected } from "@/types/SoketioResModel";
-import { emitSocket, listenSocket } from "@/utils/socket";
+import { emitSocket, isSocketConnected, listenSocket } from "@/utils/socket";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, View } from "react-native";
 import { mediaDevices, MediaStream } from "react-native-webrtc";
+
 
 const VideoCallPage = () => {
     const { roomId, userName, audio, video } = useLocalSearchParams<{
@@ -122,14 +123,16 @@ const VideoCallPage = () => {
 
 
     useEffect(() => {
-        console.log("streamReady", streamReady);
+        if (!streamReady) return;
 
-        if (!streamReady) {
-            console.log("stream not ready");
-            return;
-        };
+        let joined = false;
 
-        const onConnect = async () => {
+        const joinRoom = async () => {
+            if (joined) return;
+            joined = true;
+
+            console.log("🚪 joining room...");
+
             const res = await emitSocket<UserConnected[]>("join-room", {
                 roomId,
                 username: userName,
@@ -137,9 +140,7 @@ const VideoCallPage = () => {
                 hasVideo: video === "1",
             });
 
-            console.log(
-                `Joined room successfully. ${res?.length ?? 0} other(s) present.`
-            );
+            console.log("✅ Joined room", res);
 
             res?.forEach((p) => {
                 if (peerConnections.current[p.id]) return;
@@ -155,20 +156,16 @@ const VideoCallPage = () => {
                     })
                 );
 
-
                 createOffer(p.id);
             });
-
         };
 
-        const handleSocketConnect = () => {
-            onConnect();
-        };
-
-
+        if (isSocketConnected()) {
+            joinRoom();
+        }
 
         const cleanup = listenSocket({
-            connect: handleSocketConnect,
+            connect: joinRoom,
 
             connect_error: (err: any) => {
                 console.error("🔌 Socket Connection Error:", err.message);
@@ -178,11 +175,11 @@ const VideoCallPage = () => {
             answer: handleAnswer,
             "ice-candidate": handleIceCandidate,
 
-            "peer-media-updated": ({ id, hasAudio, hasVideo }: { id: string; hasAudio: boolean; hasVideo: boolean }) => {
+            "peer-media-updated": ({ id, hasAudio, hasVideo }) => {
                 dispatch(updatePeerMedia({ id, hasAudio, hasVideo }));
             },
 
-            "user-connected": ({ id, username, hasAudio, hasVideo }: { id: string; username: string; hasAudio: boolean; hasVideo: boolean }) => {
+            "user-connected": ({ id, username, hasAudio, hasVideo }) => {
                 if (peerConnections.current[id]) return;
 
                 createPeer(id);
