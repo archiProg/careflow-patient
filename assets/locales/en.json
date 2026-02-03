@@ -72,6 +72,8 @@
   "joinCall": "Join Call",
   "review": "Review",
   "cancel": "Cancel",
+  "reject": "Reject",
+  "accept": "Accept",
   "patient": "Patient",
   "doctor": "Doctor",
   "symptoms": "Symptoms",

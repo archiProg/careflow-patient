@@ -34,7 +34,7 @@ const VideoCallPage = () => {
     const [localStream, setLocalStream] = useState<MediaStream | null>(null);
     const [isMicOn, setIsMicOn] = useState(true);
     const [isVideoOn, setIsVideoOn] = useState(true);
-
+const handledPermissionRef = useRef<Set<string>>(new Set());
     const {
         createPeer,
         createOffer,
@@ -120,6 +120,56 @@ const VideoCallPage = () => {
 
         return cleanup;
     }, []);
+
+    useEffect(() => {
+    const cleanup = listenSocket({
+        "patient:premission_info": (payload: {
+            caseId: string;
+            permissionId: number;
+            message: string;
+        }) => {
+            console.log("📥 patient:premission_info", payload);
+
+            // กัน alert ซ้ำ
+            const key = `${payload.caseId}-${payload.permissionId}`;
+            if (handledPermissionRef.current.has(key)) return;
+            handledPermissionRef.current.add(key);
+
+            Alert.alert(
+                t("permission_request") || "Permission Request",
+                payload.message,
+                [
+                    {
+                        text: t("reject") || "ไม่ยินยอม",
+                        style: "cancel",
+                        onPress: () => {
+                            console.log("❌ Permission rejected");
+
+                            emitSocket("patient:permission_reject", {
+                                caseId: payload.caseId,
+                                permissionId: payload.permissionId,
+                            });
+                        },
+                    },
+                    {
+                        text: t("accept") || "ยินยอม",
+                        onPress: () => {
+                            console.log("✅ Permission accepted");
+
+                            emitSocket("patient:permission_accept", {
+                                caseId: payload.caseId,
+                                permissionId: payload.permissionId,
+                            });
+                        },
+                    },
+                ],
+                { cancelable: false }
+            );
+        },
+    });
+
+    return cleanup;
+}, []);
 
 
     useEffect(() => {

@@ -76,6 +76,8 @@
   "sendedHospital": "ส่งโรงพยาบาล",
   "review": "ทบทวน",
   "cancel": "ยกเลิก",
+  "reject": "ไม่ยินยอม",
+  "accept": "ยินยอม",
   "joinCall": "เข้าร่วม",
   "summarize-diagnosis": "สรุปผลตรวจ",
   "save": "บันทึกข้อมูล",
