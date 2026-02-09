@@ -125,5 +125,13 @@
   "finding_doctor": "Finding Doctor",
   "find_doctor_description": "Please wait a moment",
   "finded_doctor": "Finded Doctor",
-  "finded_doctor_description": "Please wait a moment"
+  "finded_doctor_description": "Please wait a moment",
+  "permission_request": "🔒 Request Access to Your Data",
+  "permission_message": "The doctor wants to access your medical records and health measurements.\n\nDo you consent to share this information?",
+  "error_media_access": "Camera/Microphone Error",
+  "error_media_access_description": "Failed to access camera or microphone. Please check your device permissions.",
+  "error_socket_connection": "Connection Error",
+  "error_socket_connection_description": "Failed to connect to the call server. Please try again.",
+  "error_join_room": "Failed to Join Call",
+  "error_join_room_description": "Unable to join the call room. Please try again."
 }
