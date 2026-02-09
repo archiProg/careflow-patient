@@ -133,5 +133,10 @@
   "error_socket_connection": "Connection Error",
   "error_socket_connection_description": "Failed to connect to the call server. Please try again.",
   "error_join_room": "Failed to Join Call",
-  "error_join_room_description": "Unable to join the call room. Please try again."
+  "error_join_room_description": "Unable to join the call room. Please try again.",
+  "consult_completed": "Consultation Completed",
+  "consult_thank_you": "Thank you for using our service\nWishing you good health\nand a speedy recovery",
+  "consult_blessing": "💚 Hope the doctor's advice will be helpful to you",
+  "consult_home_button": "Back to Home",
+  "consult_footer": "If you experience any unusual symptoms, please consult a doctor again"
 }
