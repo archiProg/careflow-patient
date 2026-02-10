@@ -27,428 +27,534 @@ import {
 const defaultImage = require("@/assets/images/profile_register.png");
 
 const RegisterPage = () => {
-    const colorScheme = useColorScheme();
-    const router = useRouter();
-    const { t } = useTranslation();
-    const [email, setEmail] = useState("ssss@sssss2q.com");
-    const [password, setPassword] = useState("1111");
-    const [passwordConfirm, setPasswordConfirm] = useState("1111");
-    const [name, setName] = useState("ssss");
-    const [date, setDate] = useState(new Date());
-    const [show, setShow] = useState(false);
-    const [gender, setGender] = useState<number>(0);
-    const [statusRegistor, setStatusRegistor] = useState<number>(1);
-    const [isLoading, setIsLoading] = useState(false);
-    const [image, setImage] = useState<string | null>(null);
-    const [iDCard, setIDCard] = useState<string>("9898989898989");
-    const [showPassword, setShowPassword] = useState(false);
-    const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
-    const [passwordFocused, setPasswordFocused] = useState(false);
-    const [passwordComFocused, setPasswordComFocused] = useState(false);
+  const colorScheme = useColorScheme();
+  const router = useRouter();
+  const { t } = useTranslation();
+  const [email, setEmail] = useState("ssss@sssss2q.com");
+  const [password, setPassword] = useState("1111");
+  const [passwordConfirm, setPasswordConfirm] = useState("1111");
+  const [name, setName] = useState("ssss");
+  const [date, setDate] = useState(new Date());
+  const [show, setShow] = useState(false);
+  const [gender, setGender] = useState<number>(0);
+  const [statusRegistor, setStatusRegistor] = useState<number>(2);
+  const [isLoading, setIsLoading] = useState(false);
+  const [image, setImage] = useState<string | null>(null);
+  const [iDCard, setIDCard] = useState<string>("9898989898989");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [passwordComFocused, setPasswordComFocused] = useState(false);
 
-    const handleRegister = async () => {
-        if (statusRegistor == 1) {
-            if (!name) {
-                Alert.alert("Notification", "Please enter name");
-                return;
-            }
+  // New optional fields
+  const [drugAllergy, setDrugAllergy] = useState<string>("");
+  const [congenitalDisease, setCongenitalDisease] = useState<string>("");
+  const [bloodGroup, setBloodGroup] = useState<string>("");
 
-            if (!email) {
-                Alert.alert("Notification", "Please enter email");
-                return;
-            }
+  const handleRegister = async () => {
+    if (statusRegistor == 1) {
+      if (!name) {
+        Alert.alert(t("notification"), t("register_validation_name"));
+        return;
+      }
 
-            const checkEmail = await CheckEmail(email);
-            if (checkEmail.status !== 0) {
-                Alert.alert("Notification3", checkEmail.message);
-                return;
-            }
+      if (!email) {
+        Alert.alert(t("notification"), t("register_validation_email"));
+        return;
+      }
 
-            if (!date) {
-                Alert.alert("Notification", "Please select date");
-                return;
-            }
+      const checkEmail = await CheckEmail(email);
+      if (checkEmail.status !== 0) {
+        Alert.alert(t("notification"), checkEmail.message);
+        return;
+      }
 
-            if (!gender || gender === 0) {
-                Alert.alert("Notification", "Please select gender");
-                return;
-            }
+      if (!date) {
+        Alert.alert(t("notification"), t("register_validation_date"));
+        return;
+      }
 
-            if (!password) {
-                Alert.alert("Notification", "Please enter password");
-                return;
-            }
+      if (!gender || gender === 0) {
+        Alert.alert(t("notification"), t("register_validation_gender"));
+        return;
+      }
 
-            if (!passwordConfirm) {
-                Alert.alert("Notification", "Please enter password confirm");
-                return;
-            }
+      if (!password) {
+        Alert.alert(t("notification"), t("register_validation_password"));
+        return;
+      }
 
-            if (password !== passwordConfirm) {
-                Alert.alert("Notification", "Password not match");
-                return;
-            }
-
-            setStatusRegistor(2);
-        }
-        if (statusRegistor == 2) {
-            if (!image) {
-                Alert.alert("Notification", "Please select image");
-                return;
-            }
-            if (!iDCard) {
-                Alert.alert("Notification", "Please enter ID card");
-                return;
-            }
-
-            try {
-
-                const head: RegisterPayloadModel["head"] = {
-                    password: password,
-                    birthday: date.toISOString().split("T")[0],
-                    sex: gender.toString(),
-                    id_card: iDCard,
-                    name: name,
-                    email: email,
-                };
-
-                const file: RegisterPayloadModel["file"] = {};
-                if (image) {
-                    file["image"] = image;
-                }
-
-                const payload: RegisterPayloadModel = {
-                    head,
-                    file,
-                };
-
-                const response = await registerApi(payload);
-
-                if (response.success) {
-                    Alert.alert("Notice", "Register success", [{ text: "OK" }]);
-                    router.back();
-                } else {
-                    if (response.code == 401) {
-                        Alert.alert("Notice", "ID Card already exists", [{ text: "OK" }]);
-                    }
-                    else {
-                        Alert.alert("Notice", response.response, [{ text: "OK" }]);
-                    }
-                }
-            } catch (ex: any) {
-                Alert.alert("Notice", ex.message || "Unknown error", [{ text: "OK" }]);
-            }
-        }
-    };
-
-    const pickFromGallery = async () => {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== "granted") {
-            Alert.alert("Permission denied", "Cannot access gallery");
-            return;
-        }
-
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: "images",
-            quality: 1,
-        });
-
-        if (!result.canceled) {
-            setImage(result.assets[0].uri);
-        }
-    };
-
-    const pickFromCamera = async () => {
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
-        if (status !== "granted") {
-            Alert.alert("Permission denied", "Cannot access camera");
-            return;
-        }
-
-        const result = await ImagePicker.launchCameraAsync({
-            mediaTypes: "images",
-            quality: 1,
-        });
-
-        if (!result.canceled) {
-            setImage(result.assets[0].uri);
-        }
-    };
-
-    const pickImage = () => {
+      if (!passwordConfirm) {
         Alert.alert(
-            "Select Image",
-            "Choose from camera or gallery",
-            [
-                { text: "Camera", onPress: pickFromCamera },
-                { text: "Gallery", onPress: pickFromGallery },
-                { text: "Cancel", style: "cancel" },
-            ],
-            { cancelable: true }
+          t("notification"),
+          t("register_validation_password_confirm"),
         );
-    };
+        return;
+      }
 
-    const handleApi = async (action: string) => {
-        setIsLoading(true);
-        if (action == "Register") {
-            await handleRegister();
-        }
-        setIsLoading(false);
-    };
+      if (password !== passwordConfirm) {
+        Alert.alert(
+          t("notification"),
+          t("register_validation_password_mismatch"),
+        );
+        return;
+      }
 
-    const backButton = () => {
-        if (statusRegistor == 1) {
-            router.replace("/pages/auth/LoginPage");
-        } else {
-            setStatusRegistor(1);
-        }
-    };
+      setStatusRegistor(2);
+    }
+    if (statusRegistor == 2) {
+      if (!image) {
+        Alert.alert(t("notification"), t("register_validation_image"));
+        return;
+      }
+      if (!iDCard) {
+        Alert.alert(t("notification"), t("register_validation_id_card"));
+        return;
+      }
 
-    useEffect(() => {
-        const backAction = () => {
-            if (statusRegistor === 1) {
-                router.replace("/pages/auth/LoginPage");
-            } else {
-                setStatusRegistor(1);
-            }
-            return true;
+      try {
+        const head: RegisterPayloadModel["head"] = {
+          password: password,
+          birthday: date.toISOString().split("T")[0],
+          sex: gender.toString(),
+          id_card: iDCard,
+          name: name,
+          email: email,
+          // Add optional fields only if they have values
+          ...(drugAllergy && { drug_allergy: drugAllergy }),
+          ...(congenitalDisease && { congenital_disease: congenitalDisease }),
+          ...(bloodGroup && { blood_group: bloodGroup }),
         };
 
-        const backHandler = BackHandler.addEventListener(
-            "hardwareBackPress",
-            backAction
-        );
+        const file: RegisterPayloadModel["file"] = {};
+        if (image) {
+          file["image"] = image;
+        }
 
-        return () => backHandler.remove();
-    }, [statusRegistor]);
+        const payload: RegisterPayloadModel = {
+          head,
+          file,
+        };
 
-    return (
-        <>
-            <View className={` ${BG.default} flex-1 h-full w-full`}>
-                <View className="flex-row items-center mb-8">
-                    <View className="flex items-start">
-                        <Pressable className="px-3 rounded-full" onPress={backButton}>
-                            <FontAwesome
-                                name="angle-left"
-                                size={36}
-                                className="text-black dark:text-white"
-                                color={colorScheme === "dark" ? "#fff" : "#000"}
-                            />
-                        </Pressable>
-                    </View>
+        const response = await registerApi(payload);
 
-                    <View className="flex-1 items-start h-4 rounded-full bg-gray-300 dark:bg-gray-700 mx-4">
-                        <View
-                            className="h-4 bg-[#2196F3] rounded-full"
-                            style={{ width: statusRegistor == 1 ? "50%" : "100%" }}
-                        ></View>
-                    </View>
+        if (response.success) {
+          Alert.alert(t("notification"), t("register_success"), [
+            { text: t("ok") },
+          ]);
+          router.back();
+        } else {
+          if (response.code == 401) {
+            Alert.alert(t("notification"), t("register_id_card_exists"), [
+              { text: t("ok") },
+            ]);
+          } else {
+            Alert.alert(t("notification"), response.response, [
+              { text: t("ok") },
+            ]);
+          }
+        }
+      } catch (ex: any) {
+        Alert.alert(t("notification"), ex.message || "Unknown error", [
+          { text: t("ok") },
+        ]);
+      }
+    }
+  };
 
-                    <View className="flex items-end px-3">
-                        <Text className="text-black dark:text-white">
-                            {statusRegistor}/2
-                        </Text>
-                    </View>
-                </View>
-                <Text className="text-2xl font-bold text-black mb-[16px] dark:text-white">
-                    Register
-                </Text>
-                {statusRegistor == 1 ? (
-                    <KeyboardAvoidingView
-                        style={{ flex: 1 }}
-                        behavior={Platform.OS === "ios" ? "padding" : "height"}
-                        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
-                    >
-                        <ScrollView
-                            contentContainerStyle={{ paddingBottom: 20 }}
-                            showsVerticalScrollIndicator={false}
-                            keyboardShouldPersistTaps="handled"
-                        >
-                            <Text className="text-lg font-bold text-black mb-[8px] dark:text-white">
-                                name
-                            </Text>
+  const pickFromGallery = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        t("register_permission_denied"),
+        t("register_cannot_access_gallery"),
+      );
+      return;
+    }
 
-                            <TextInput
-                                className="h-[56px] mb-[16px] rounded-[24px]  border-[1px] border-gray-900 focus:border-[#2196F3] focus:outline-none focus:ring-1 focus:ring-[#2196F3] placeholder:text-gray-400 p-4 
-                dark:border-gray-200 dark:text-white"
-                                placeholder={t("placeholder_name")}
-                                keyboardType="default"
-                                value={name}
-                                onChangeText={setName}
-                            />
-                            <Text className="text-lg font-bold text-black mb-[8px] dark:text-white">
-                                email
-                            </Text>
-                            <TextInput
-                                className="h-[56px] mb-[16px] rounded-[24px] border-[1px] border-gray-900 focus:border-[#2196F3] focus:outline-none focus:ring-1 focus:ring-[#2196F3] placeholder:text-gray-400 p-4 
-                dark:border-gray-200 dark:text-white"
-                                placeholder={t("placeholder_email")}
-                                keyboardType="email-address"
-                                value={email}
-                                onChangeText={setEmail}
-                            />
-                            <View className="w-full flex-row gap-4">
-                                <View className="flex-1">
-                                    <Text className="mb-2 text-lg font-bold text-black dark:text-white">
-                                        Date of birth
-                                    </Text>
-                                    <Pressable onPress={() => setShow(true)}>
-                                        <View
-                                            className="h-[56px] rounded-[24px] border-[1px] border-gray-900 focus:border-[#2196F3] focus:outline-none focus:ring-1 focus:ring-[#2196F3] placeholder:text-gray-400 p-4 
-                dark:border-gray-200  justify-center"
-                                        >
-                                            <Text className="dark:text-white">
-                                                {date.toDateString()}
-                                            </Text>
-                                        </View>
-                                    </Pressable>
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images",
+      quality: 1,
+    });
 
-                                    {show && (
-                                        <DateTimePicker
-                                            value={date}
-                                            mode="date"
-                                            display={
-                                                Platform.OS === "android" ? "calendar" : "default"
-                                            }
-                                            onChange={(event, selectedDate) => {
-                                                setShow(false);
-                                                if (selectedDate) setDate(selectedDate);
-                                            }}
-                                        />
-                                    )}
-                                </View>
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
 
-                                <View className="flex-1 mb-[16px]">
-                                    <Text className="mb-2 text-lg font-bold text-black dark:text-white">
-                                        Gender
-                                    </Text>
+  const pickFromCamera = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        t("register_permission_denied"),
+        t("register_cannot_access_camera"),
+      );
+      return;
+    }
 
-                                    <View
-                                        className="h-[56px] rounded-[24px] border-[1px] border-gray-900 focus:border-[#2196F3] focus:outline-none focus:ring-1 focus:ring-[#2196F3] placeholder:text-gray-400 p-4 
-                dark:border-gray-200 justify-center overflow-hidden"
-                                    >
-                                        <Picker
-                                            selectedValue={gender}
-                                            onValueChange={(itemValue) => setGender(itemValue)}
-                                        >
-                                            {gender === 0 && <Picker.Item label="Select" value={0} />}
-                                            <Picker.Item label="Male" value={1} />
-                                            <Picker.Item label="Female" value={2} />
-                                        </Picker>
-                                    </View>
-                                </View>
-                            </View>
-                            <View className="flex-1 ">
-                                <Text className="mb-2 text-lg font-bold text-black dark:text-white">
-                                    Password
-                                </Text>
-                                <View
-                                    className={`flex-row items-center h-[56px] mb-[16px] rounded-[24px] px-4 border ${passwordFocused
-                                        ? "border-[#2196F3] dark:border-[#64B5F6]"
-                                        : "border-gray-900 dark:border-gray-200"
-                                        }`}
-                                >
-                                    <TextInput
-                                        onFocus={() => setPasswordFocused(true)}
-                                        onBlur={() => setPasswordFocused(false)}
-                                        className="flex-1 dark:text-white placeholder:text-gray-400"
-                                        placeholder={t("placeholder_password")}
-                                        secureTextEntry={!showPassword}
-                                        value={password}
-                                        onChangeText={setPassword}
-                                        returnKeyType="next"
-                                    />
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: "images",
+      quality: 1,
+    });
 
-                                    <TouchableOpacity
-                                        className="h-full px-4 justify-center"
-                                        onPress={() => setShowPassword(!showPassword)}
-                                    >
-                                        <FontAwesome
-                                            name={showPassword ? "eye" : "eye-slash"}
-                                            size={20}
-                                            className={`text-gray-600 dark:text-gray-300`}
-                                            color={colorScheme === "dark" ? "#fff" : "#000"}
-                                        />
-                                    </TouchableOpacity>
-                                </View>
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
 
-                                <View
-                                    className={`flex-row items-center h-[56px] mb-[16px] rounded-[24px] px-4 border ${passwordComFocused
-                                        ? "border-[#2196F3] dark:border-[#64B5F6]"
-                                        : "border-gray-900 dark:border-gray-200"
-                                        }`}
-                                >
-                                    <TextInput
-                                        onFocus={() => setPasswordComFocused(true)}
-                                        onBlur={() => setPasswordComFocused(false)}
-                                        className="flex-1 dark:text-white placeholder:text-gray-400"
-                                        placeholder={t("placeholder_password_confirm")}
-                                        secureTextEntry={!showPasswordConfirm}
-                                        value={passwordConfirm}
-                                        onChangeText={setPasswordConfirm}
-                                        returnKeyType="next"
-                                    />
-
-                                    <TouchableOpacity
-                                        className="h-full px-4 justify-center"
-                                        onPress={() => setShowPasswordConfirm(!showPasswordConfirm)}
-                                    >
-                                        <FontAwesome
-                                            name={showPasswordConfirm ? "eye" : "eye-slash"}
-                                            size={20}
-                                            className={`text-gray-600 dark:text-gray-300`}
-                                            color={colorScheme === "dark" ? "#fff" : "#000"}
-                                        />
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        </ScrollView>
-                    </KeyboardAvoidingView>
-                ) : (
-                    <View className="flex-1 w-full my-[16px] ">
-                        <View className="items-center mb-[24px]">
-                            <TouchableOpacity onPress={pickImage}>
-                                <Image
-                                    className={`${image ? "rounded-full" : ""} w-[200px] h-[200px]`}
-                                    source={image ? { uri: image } : defaultImage}
-                                />
-                            </TouchableOpacity>
-                        </View>
-
-                        <Text className="text-lg font-bold text-black mb-[8px] dark:text-white">
-                            ID Card
-                        </Text>
-                        <TextInput
-                            className="h-[56px] mb-[16px] rounded-[24px] border-[1px] border-gray-900 focus:border-[#2196F3] focus:outline-none focus:ring-1 focus:ring-[#2196F3] placeholder:text-gray-400 p-4 
-                dark:border-gray-200 dark:text-white"
-                            placeholder={t("placeholder_id_card")}
-                            keyboardType="default"
-                            value={iDCard}
-                            onChangeText={setIDCard}
-                        />
-                    </View>
-                )}
-                <Pressable
-                    onPress={async () => {
-                        await handleApi("Register");
-                    }}
-                    className="h-[56px] w-full rounded-[24px] mb-10 bg-blue-500 items-center justify-center dark:bg-[#2196F3]"
-                >
-                    <Text className=" text-center text-white font-bold">
-                        {statusRegistor === 1 ? t("continue") : t("register")}
-                    </Text>
-                </Pressable>
-            </View>
-
-            {isLoading && (
-                <View className="absolute w-full h-full flex items-center justify-center bg-black/50">
-                    <View className="w-48 h-48 rounded-xl bg-white overflow-hidden justify-center items-center dark:bg-gray-900">
-                        <Loading />
-                    </View>
-                </View>
-            )}
-        </>
+  const pickImage = () => {
+    Alert.alert(
+      t("register_select_image"),
+      t("register_choose_source"),
+      [
+        { text: t("register_camera"), onPress: pickFromCamera },
+        { text: t("register_gallery"), onPress: pickFromGallery },
+        { text: t("cancel"), style: "cancel" },
+      ],
+      { cancelable: true },
     );
+  };
+
+  const handleApi = async (action: string) => {
+    setIsLoading(true);
+    if (action == "Register") {
+      await handleRegister();
+    }
+    setIsLoading(false);
+  };
+
+  const backButton = () => {
+    if (statusRegistor == 1) {
+      router.replace("/pages/auth/LoginPage");
+    } else {
+      setStatusRegistor(1);
+    }
+  };
+
+  useEffect(() => {
+    const backAction = () => {
+      if (statusRegistor === 1) {
+        router.replace("/pages/auth/LoginPage");
+      } else {
+        setStatusRegistor(1);
+      }
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction,
+    );
+
+    return () => backHandler.remove();
+  }, [statusRegistor]);
+
+  return (
+    <>
+      <View className={` ${BG.default} flex-1 h-full w-full`}>
+        <View className="flex-row items-center mb-8">
+          <View className="flex items-start">
+            <Pressable className="px-3 rounded-full" onPress={backButton}>
+              <FontAwesome
+                name="angle-left"
+                size={36}
+                className="text-black dark:text-white"
+                color={colorScheme === "dark" ? "#fff" : "#000"}
+              />
+            </Pressable>
+          </View>
+
+          <View className="flex-1 items-start h-4 rounded-full bg-gray-300 dark:bg-gray-700 mx-4">
+            <View
+              className="h-4 bg-[#2196F3] rounded-full"
+              style={{ width: statusRegistor == 1 ? "50%" : "100%" }}
+            ></View>
+          </View>
+
+          <View className="flex items-end px-3">
+            <Text className="text-black dark:text-white">
+              {statusRegistor}/2
+            </Text>
+          </View>
+        </View>
+        <Text className="text-2xl font-bold text-black mb-[16px] dark:text-white">
+          {t("register_title")}
+        </Text>
+        {statusRegistor == 1 ? (
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
+          >
+            <ScrollView
+              contentContainerStyle={{ paddingBottom: 20 }}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              <Text className="text-lg font-bold text-black mb-[8px] dark:text-white">
+                {t("register_name_label")}
+              </Text>
+
+              <TextInput
+                className="h-[56px] mb-[16px] rounded-[24px]  border-[1px] border-gray-900 focus:border-[#2196F3] focus:outline-none focus:ring-1 focus:ring-[#2196F3] placeholder:text-gray-400 p-4 
+                dark:border-gray-200 dark:text-white"
+                placeholder={t("placeholder_name")}
+                keyboardType="default"
+                value={name}
+                onChangeText={setName}
+              />
+              <Text className="text-lg font-bold text-black mb-[8px] dark:text-white">
+                {t("register_email_label")}
+              </Text>
+              <TextInput
+                className="h-[56px] mb-[16px] rounded-[24px] border-[1px] border-gray-900 focus:border-[#2196F3] focus:outline-none focus:ring-1 focus:ring-[#2196F3] placeholder:text-gray-400 p-4 
+                dark:border-gray-200 dark:text-white"
+                placeholder={t("placeholder_email")}
+                keyboardType="email-address"
+                value={email}
+                onChangeText={setEmail}
+              />
+              <View className="w-full flex-row gap-4">
+                <View className="flex-1">
+                  <Text className="mb-2 text-lg font-bold text-black dark:text-white">
+                    {t("register_date_of_birth_label")}
+                  </Text>
+                  <Pressable onPress={() => setShow(true)}>
+                    <View
+                      className="h-[56px] rounded-[24px] border-[1px] border-gray-900 focus:border-[#2196F3] focus:outline-none focus:ring-1 focus:ring-[#2196F3] placeholder:text-gray-400 p-4 
+                dark:border-gray-200  justify-center"
+                    >
+                      <Text className="dark:text-white">
+                        {date.toDateString()}
+                      </Text>
+                    </View>
+                  </Pressable>
+
+                  {show && (
+                    <DateTimePicker
+                      value={date}
+                      mode="date"
+                      display={
+                        Platform.OS === "android" ? "calendar" : "default"
+                      }
+                      onChange={(event, selectedDate) => {
+                        setShow(false);
+                        if (selectedDate) setDate(selectedDate);
+                      }}
+                    />
+                  )}
+                </View>
+
+                <View className="flex-1 mb-[16px]">
+                  <Text className="mb-2 text-lg font-bold text-black dark:text-white">
+                    {t("register_gender_label")}
+                  </Text>
+
+                  <View
+                    className="h-[56px] rounded-[24px] border-[1px] border-gray-900 focus:border-[#2196F3] focus:outline-none focus:ring-1 focus:ring-[#2196F3] placeholder:text-gray-400 p-4 
+                dark:border-gray-200 justify-center overflow-hidden"
+                  >
+                    <Picker
+                      selectedValue={gender}
+                      onValueChange={(itemValue) => setGender(itemValue)}
+                    >
+                      {gender === 0 && (
+                        <Picker.Item
+                          label={t("register_gender_select")}
+                          value={0}
+                        />
+                      )}
+                      <Picker.Item
+                        label={t("register_gender_male")}
+                        value={1}
+                      />
+                      <Picker.Item
+                        label={t("register_gender_female")}
+                        value={2}
+                      />
+                    </Picker>
+                  </View>
+                </View>
+              </View>
+              <View className="flex-1 ">
+                <Text className="mb-2 text-lg font-bold text-black dark:text-white">
+                  {t("register_password_label")}
+                </Text>
+                <View
+                  className={`flex-row items-center h-[56px] mb-[16px] rounded-[24px] px-4 border ${
+                    passwordFocused
+                      ? "border-[#2196F3] dark:border-[#64B5F6]"
+                      : "border-gray-900 dark:border-gray-200"
+                  }`}
+                >
+                  <TextInput
+                    onFocus={() => setPasswordFocused(true)}
+                    onBlur={() => setPasswordFocused(false)}
+                    className="flex-1 dark:text-white placeholder:text-gray-400"
+                    placeholder={t("placeholder_password")}
+                    secureTextEntry={!showPassword}
+                    value={password}
+                    onChangeText={setPassword}
+                    returnKeyType="next"
+                  />
+
+                  <TouchableOpacity
+                    className="h-full px-4 justify-center"
+                    onPress={() => setShowPassword(!showPassword)}
+                  >
+                    <FontAwesome
+                      name={showPassword ? "eye" : "eye-slash"}
+                      size={20}
+                      className={`text-gray-600 dark:text-gray-300`}
+                      color={colorScheme === "dark" ? "#fff" : "#000"}
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                <View
+                  className={`flex-row items-center h-[56px] mb-[16px] rounded-[24px] px-4 border ${
+                    passwordComFocused
+                      ? "border-[#2196F3] dark:border-[#64B5F6]"
+                      : "border-gray-900 dark:border-gray-200"
+                  }`}
+                >
+                  <TextInput
+                    onFocus={() => setPasswordComFocused(true)}
+                    onBlur={() => setPasswordComFocused(false)}
+                    className="flex-1 dark:text-white placeholder:text-gray-400"
+                    placeholder={t("placeholder_password_confirm")}
+                    secureTextEntry={!showPasswordConfirm}
+                    value={passwordConfirm}
+                    onChangeText={setPasswordConfirm}
+                    returnKeyType="next"
+                  />
+
+                  <TouchableOpacity
+                    className="h-full px-4 justify-center"
+                    onPress={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                  >
+                    <FontAwesome
+                      name={showPasswordConfirm ? "eye" : "eye-slash"}
+                      size={20}
+                      className={`text-gray-600 dark:text-gray-300`}
+                      color={colorScheme === "dark" ? "#fff" : "#000"}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        ) : (
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
+          >
+            <ScrollView
+              contentContainerStyle={{ paddingBottom: 20 }}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              <View className="items-center mb-[24px]">
+                <TouchableOpacity onPress={pickImage}>
+                  <Image
+                    className={`${image ? "rounded-full" : ""} w-[200px] h-[200px]`}
+                    source={image ? { uri: image } : defaultImage}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              <Text className="text-lg font-bold text-black mb-[8px] dark:text-white">
+                {t("register_id_card_label")}
+              </Text>
+              <TextInput
+                className="h-[56px] mb-[16px] rounded-[24px] border-[1px] border-gray-900 focus:border-[#2196F3] focus:outline-none focus:ring-1 focus:ring-[#2196F3] placeholder:text-gray-400 p-4 
+                dark:border-gray-200 dark:text-white"
+                placeholder={t("placeholder_id_card")}
+                keyboardType="default"
+                value={iDCard}
+                onChangeText={setIDCard}
+              />
+
+              {/* New optional fields */}
+              <Text className="text-lg font-bold text-black mb-[8px] dark:text-white">
+                {t("register_blood_group_label")}{" "}
+                <Text className="text-sm font-normal text-gray-500">
+                  {t("register_optional")}
+                </Text>
+              </Text>
+              <View className="h-[56px] mb-[16px] rounded-[24px] border-[1px] border-gray-900 dark:border-gray-200 justify-center overflow-hidden">
+                <Picker
+                  selectedValue={bloodGroup}
+                  onValueChange={(itemValue) => setBloodGroup(itemValue)}
+                >
+                  <Picker.Item
+                    label={t("register_blood_group_unknown")}
+                    value=""
+                  />
+                  <Picker.Item label={t("register_blood_group_a")} value="A" />
+                  <Picker.Item label={t("register_blood_group_b")} value="B" />
+                  <Picker.Item
+                    label={t("register_blood_group_ab")}
+                    value="AB"
+                  />
+                  <Picker.Item label={t("register_blood_group_o")} value="O" />
+                </Picker>
+              </View>
+
+              <Text className="text-lg font-bold text-black mb-[8px] dark:text-white">
+                {t("register_drug_allergy_label")}{" "}
+                <Text className="text-sm font-normal text-gray-500">
+                  {t("register_optional")}
+                </Text>
+              </Text>
+              <TextInput
+                className="h-[56px] mb-[16px] rounded-[24px] border-[1px] border-gray-900 focus:border-[#2196F3] focus:outline-none focus:ring-1 focus:ring-[#2196F3] placeholder:text-gray-400 p-4 
+                dark:border-gray-200 dark:text-white"
+                placeholder={t("register_drug_allergy_placeholder")}
+                keyboardType="default"
+                value={drugAllergy}
+                onChangeText={setDrugAllergy}
+              />
+
+              <Text className="text-lg font-bold text-black mb-[8px] dark:text-white">
+                {t("register_congenital_disease_label")}{" "}
+                <Text className="text-sm font-normal text-gray-500">
+                  {t("register_optional")}
+                </Text>
+              </Text>
+              <TextInput
+                className="h-[56px] mb-[16px] rounded-[24px] border-[1px] border-gray-900 focus:border-[#2196F3] focus:outline-none focus:ring-1 focus:ring-[#2196F3] placeholder:text-gray-400 p-4 
+                dark:border-gray-200 dark:text-white"
+                placeholder={t("register_congenital_disease_placeholder")}
+                keyboardType="default"
+                value={congenitalDisease}
+                onChangeText={setCongenitalDisease}
+              />
+            </ScrollView>
+          </KeyboardAvoidingView>
+        )}
+        <Pressable
+          onPress={async () => {
+            await handleApi("Register");
+          }}
+          className="h-[56px] w-full rounded-[24px] mb-10 bg-blue-500 items-center justify-center dark:bg-[#2196F3]"
+        >
+          <Text className=" text-center text-white font-bold">
+            {statusRegistor === 1 ? t("continue") : t("register")}
+          </Text>
+        </Pressable>
+      </View>
+
+      {isLoading && (
+        <View className="absolute w-full h-full flex items-center justify-center bg-black/50">
+          <View className="w-48 h-48 rounded-xl bg-white overflow-hidden justify-center items-center dark:bg-gray-900">
+            <Loading />
+          </View>
+        </View>
+      )}
+    </>
+  );
 };
 
 export default RegisterPage;
