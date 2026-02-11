@@ -37,7 +37,7 @@ const RegisterPage = () => {
   const [date, setDate] = useState(new Date());
   const [show, setShow] = useState(false);
   const [gender, setGender] = useState<number>(0);
-  const [statusRegistor, setStatusRegistor] = useState<number>(2);
+  const [statusRegistor, setStatusRegistor] = useState<number>(1);
   const [isLoading, setIsLoading] = useState(false);
   const [image, setImage] = useState<string | null>(null);
   const [iDCard, setIDCard] = useState<string>("9898989898989");

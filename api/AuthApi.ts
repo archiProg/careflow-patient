@@ -5,6 +5,18 @@ import { getApiJwt, postApi } from "./Client";
 export const loginIdCardApi = (payload: LoginPayloadModel) =>
   postApi("/loginfaceid", JSON.stringify(payload));
 
+export const loginFaceApi = (base64: string) => {
+  const payload = {
+    action: "face_recog",
+    content: {
+      base64, 
+    },
+  };
+
+  return postApi("/loginfaceid", JSON.stringify(payload));
+};
+
+
 export const authenMeApi = (token: string) => getApiJwt("/authme", token);
 
 export const registerApi = (payload: RegisterPayloadModel) =>
