@@ -1,7 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { View, StyleSheet, TouchableOpacity, Text ,Button } from 'react-native';
+import LoadingComp from "@/components/LoadingComp";
+import Provider from "@/services/providerService";
+import { useState } from "react";
+
+
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Print from 'expo-print';
 
 /* ---------- Color Palette (White–Blue) ---------- */
 const colors = {
@@ -21,50 +28,77 @@ const colors = {
 };
 
 const ConsultSuccessPage = () => {
+  const [loading, setLoading] = useState(false);
+
+  const { consult_id, userName } = useLocalSearchParams<{
+    consult_id: string;
+    userName: string;
+  }>();
+    console.log("roomId", consult_id, userName);
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language; 
 
-  const handleGoHome = () => {
+const handleGoHome = async () => {
+  try {
+    setLoading(true); // ✅ เริ่ม loading
+
+    const pdfUrl = `${Provider.HostAPI_URL}/pdf/treatment/${consult_id}/${currentLang}`;
+    console.log("PDF URL:", pdfUrl);
+
+    const fileUri = FileSystem.documentDirectory + "temp.pdf";
+
+    const downloadResult = await FileSystem.downloadAsync(pdfUrl, fileUri);
+    console.log("Downloaded to:", downloadResult.uri);
+
+    await Print.printAsync({ uri: downloadResult.uri });
+  console.log("Print success");
+
     router.replace(`/pages/main/HomePage`);
-  };
+  } catch (error) {
+    console.error("print pdf error:", error);
+    router.replace(`/pages/main/HomePage`);
+  } finally {
+      console.log("Print failed:",);
+    setLoading(false); // ✅ ปิด loading ไม่ว่าจะ error หรือไม่
+        router.replace(`/pages/main/HomePage`);
+  }
+};
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.contentContainer}>
-        {/* Success Icon */}
-        <View style={styles.iconContainer}>
-          <Ionicons name="checkmark-circle" size={100} color={colors.blue500} />
-        </View>
+return (
+  <View style={styles.container}>
+    {loading && <LoadingComp />}  {/* ✅ Loading Overlay */}
 
-        {/* Success Message */}
-        <Text style={styles.title}>{t("consult_completed")}</Text>
-
-        <Text style={styles.message}>{t("consult_thank_you")}</Text>
-
-        <View style={styles.blessingsContainer}>
-          <Text style={styles.blessingsText}>{t("consult_blessing")}</Text>
-        </View>
-
-        {/* Home Button */}
-        <TouchableOpacity
-          style={styles.homeButton}
-          onPress={handleGoHome}
-          activeOpacity={0.8}
-        >
-          <Ionicons
-            name="home"
-            size={24}
-            color={colors.white}
-            style={styles.buttonIcon}
-          />
-          <Text style={styles.homeButtonText}>{t("consult_home_button")}</Text>
-        </TouchableOpacity>
-
-        {/* Additional Info */}
-        <Text style={styles.footerText}>{t("consult_footer")}</Text>
+    <View style={styles.contentContainer}>
+      {/* Success Icon */}
+      <View style={styles.iconContainer}>
+        <Ionicons name="checkmark-circle" size={100} color={colors.blue500} />
       </View>
+
+      <Text style={styles.title}>{t("consult_completed")}</Text>
+      <Text style={styles.message}>{t("consult_thank_you")}</Text>
+
+      <View style={styles.blessingsContainer}>
+        <Text style={styles.blessingsText}>{t("consult_blessing")}</Text>
+      </View>
+
+      <TouchableOpacity
+        style={styles.homeButton}
+        onPress={handleGoHome}
+        activeOpacity={0.8}
+        disabled={loading}   // ✅ กันกดซ้ำ
+      >
+        <Ionicons name="home" size={24} color={colors.white} style={styles.buttonIcon} />
+        <Text style={styles.homeButtonText}>
+          {loading ? t("loading") : t("consult_home_button")}
+        </Text>
+      </TouchableOpacity>
+
+      <Text style={styles.footerText}>{t("consult_footer")}</Text>
     </View>
-  );
+  </View>
+);
+
 };
 
 const styles = StyleSheet.create({

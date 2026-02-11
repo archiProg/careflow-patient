@@ -100,12 +100,14 @@ const VideoCallPage = () => {
           emitSocket("doctor:end-case", { caseId: roomId });
 
           if (Provider.Profile?.role == user_role.d) {
-            router.replace({
-              pathname: "/pages/main/ConsultSuccessPage",
-              params: {
-                consult_id: roomId,
-              },
-            });
+        router.replace({
+                pathname: "/pages/main/ConsultSuccessPage",
+                params: {
+                  token: Provider.Token,
+                  consult_id: roomId,
+                  userName: Provider.Profile?.name ?? "Unknown",
+                },
+              });
           }
           cleanupConnections();
         },
@@ -123,7 +125,14 @@ const VideoCallPage = () => {
         endedBy: string;
       }) => {
         console.log(caseId, endedBy);
-        router.replace(`/pages/main/ConsultSuccessPage`);
+        router.replace({
+                pathname: "/pages/main/ConsultSuccessPage",
+                params: {
+                  token: Provider.Token,
+                  consult_id: roomId,
+                  userName: Provider.Profile?.name ?? "Unknown",
+                },
+              });
       },
     });
 
