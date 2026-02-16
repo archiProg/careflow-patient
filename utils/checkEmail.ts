@@ -7,9 +7,9 @@ const CheckEmail = async (email: string): Promise<CheckEmailResponse> => {
         const response = await checkEmailApi(body);
         if (!response.success) {
             if (response.code == 401) {
-                return { message: response.response, status: 0 };
+                return { message: response.response, th: response.response, en: response.response, status: 0 };
             }
-            return { message: response.response, status: -1 };
+            return { message: response.response, th: response.response, en: response.response, status: -1 };
         }
 
         let getResponse: CheckEmailResponse;
@@ -19,11 +19,11 @@ const CheckEmail = async (email: string): Promise<CheckEmailResponse> => {
         if (getResponse != null) {
             return getResponse;
         } else {
-            return { message: "Server error", status: -1 };
+            return { message: "Server error", th: "เกิดข้อผิดพลาดจากระบบ", en: "Server error", status: -1 };
         }
     } catch (error) {
         console.error("checkEmail error:", error);
-        return { message: "Server error", status: -1 };
+        return { message: "Server error", th: "เกิดข้อผิดพลาดจากระบบ", en: "Server error", status: -1 };
     }
 }
 
