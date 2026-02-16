@@ -6,6 +6,9 @@ export interface RegisterPayloadModel {
         birthday: string;
         sex: string;
         id_card: string;
+        drug_allergy?: string;
+        congenital_disease?: string;
+        blood_group?: string;
     };
     file?: {
         image?: string;

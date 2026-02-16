@@ -4,20 +4,21 @@ import { checkEmailApi } from "../api/AuthApi";
 const CheckEmail = async (email: string): Promise<CheckEmailResponse> => {
     const body = { email };
     try {
-        const response = await checkEmailApi(body);
-        if (!response.success) {
-            if (response.code == 401) {
-                return { message: response.response, th: response.response, en: response.response, status: 0 };
-            }
-            return { message: response.response, th: response.response, en: response.response, status: -1 };
+        const res = await checkEmailApi(body);
+        if (!res.success) {
+            let getResponse: CheckEmailResponse;
+
+            getResponse = JSON.parse(res.response);
+            return { message: getResponse.toString(), th: getResponse.th || "", en: getResponse.en || "", status: -1 };
         }
+
 
         let getResponse: CheckEmailResponse;
 
-        getResponse = JSON.parse(response.response);
+        getResponse = JSON.parse(res.response);
 
         if (getResponse != null) {
-            return getResponse;
+            return { message: getResponse.toString(), th: getResponse.th, en: getResponse.en, status: 0 };
         } else {
             return { message: "Server error", th: "เกิดข้อผิดพลาดจากระบบ", en: "Server error", status: -1 };
         }

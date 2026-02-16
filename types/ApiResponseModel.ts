@@ -3,3 +3,10 @@ export interface ApiResponseModel {
     response: string;
     code: number;
 }
+
+
+export interface ErrorResponseModel {
+    response: string;
+    th: string;
+    en: string;
+}
