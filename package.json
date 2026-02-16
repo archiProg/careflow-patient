@@ -59,7 +59,11 @@
     "react-redux": "^9.2.0",
     "redux-persist": "^6.0.0",
     "socket.io-client": "^4.8.3",
-    "tailwindcss": "^3.4.19"
+    "tailwindcss": "^3.4.19",
+    "react-native-vision-camera": "^4.7.3",
+    "react-native-worklets-core": "^1.6.2",
+    "react-native-vision-camera-face-detector": "^1.10.1",
+    "@shopify/react-native-skia": "2.2.12"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",

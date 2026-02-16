@@ -1,6 +1,8 @@
 import { registerApi } from "@/api/AuthApi";
+import { FaceCaptureCamera } from "@/components/FaceCaptureCameraProps";
 import Loading from "@/components/LoadingComp";
 import { BG } from "@/constants/styles";
+import i18n from "@/hooks/useI18n";
 import { RegisterPayloadModel } from "@/types/RegisterPayloadModel";
 import { CheckEmail } from "@/utils/checkEmail";
 import { FontAwesome } from "@expo/vector-icons";
@@ -11,18 +13,18 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-    Alert,
-    BackHandler,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    useColorScheme,
-    View,
+  Alert,
+  BackHandler,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  useColorScheme,
+  View,
 } from "react-native";
 const defaultImage = require("@/assets/images/profile_register.png");
 
@@ -65,7 +67,7 @@ const RegisterPage = () => {
 
       const checkEmail = await CheckEmail(email);
       if (checkEmail.status !== 0) {
-        Alert.alert(t("notification"), checkEmail.message);
+        Alert.alert(t("notification"), i18n.language === "th" ? checkEmail.th : checkEmail.en);
         return;
       }
 
@@ -381,11 +383,10 @@ const RegisterPage = () => {
                   {t("register_password_label")}
                 </Text>
                 <View
-                  className={`flex-row items-center h-[56px] mb-[16px] rounded-[24px] px-4 border ${
-                    passwordFocused
-                      ? "border-[#2196F3] dark:border-[#64B5F6]"
-                      : "border-gray-900 dark:border-gray-200"
-                  }`}
+                  className={`flex-row items-center h-[56px] mb-[16px] rounded-[24px] px-4 border ${passwordFocused
+                    ? "border-[#2196F3] dark:border-[#64B5F6]"
+                    : "border-gray-900 dark:border-gray-200"
+                    }`}
                 >
                   <TextInput
                     onFocus={() => setPasswordFocused(true)}
@@ -412,11 +413,10 @@ const RegisterPage = () => {
                 </View>
 
                 <View
-                  className={`flex-row items-center h-[56px] mb-[16px] rounded-[24px] px-4 border ${
-                    passwordComFocused
-                      ? "border-[#2196F3] dark:border-[#64B5F6]"
-                      : "border-gray-900 dark:border-gray-200"
-                  }`}
+                  className={`flex-row items-center h-[56px] mb-[16px] rounded-[24px] px-4 border ${passwordComFocused
+                    ? "border-[#2196F3] dark:border-[#64B5F6]"
+                    : "border-gray-900 dark:border-gray-200"
+                    }`}
                 >
                   <TextInput
                     onFocus={() => setPasswordComFocused(true)}
@@ -544,6 +544,16 @@ const RegisterPage = () => {
             {statusRegistor === 1 ? t("continue") : t("register")}
           </Text>
         </Pressable>
+      </View>
+
+
+      <View className={`absolute w-full h-full ${(image == null && statusRegistor === 2) ? "" : "hidden"}`}>
+        <FaceCaptureCamera
+          IsActive={image == null && statusRegistor === 2}
+          onCapture={(uri: string) => {
+            setImage(uri);
+          }}
+        />
       </View>
 
       {isLoading && (
