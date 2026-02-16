@@ -3,6 +3,7 @@ import { FaceCaptureCamera } from "@/components/FaceCaptureCameraProps";
 import Loading from "@/components/LoadingComp";
 import { BG } from "@/constants/styles";
 import i18n from "@/hooks/useI18n";
+import { CheckEmailResponse } from "@/types/CheckEmailModel";
 import { RegisterPayloadModel } from "@/types/RegisterPayloadModel";
 import { CheckEmail } from "@/utils/checkEmail";
 import { FontAwesome } from "@expo/vector-icons";
@@ -48,12 +49,16 @@ const RegisterPage = () => {
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [passwordComFocused, setPasswordComFocused] = useState(false);
 
-  // New optional fields
   const [drugAllergy, setDrugAllergy] = useState<string>("");
   const [congenitalDisease, setCongenitalDisease] = useState<string>("");
   const [bloodGroup, setBloodGroup] = useState<string>("");
 
   const handleRegister = async () => {
+    console.log(
+      date.toString(),
+      email
+    );
+
     if (statusRegistor == 1) {
       if (!name) {
         Alert.alert(t("notification"), t("register_validation_name"));
@@ -122,10 +127,9 @@ const RegisterPage = () => {
           id_card: iDCard,
           name: name,
           email: email,
-          // Add optional fields only if they have values
-          ...(drugAllergy && { drug_allergy: drugAllergy }),
-          ...(congenitalDisease && { congenital_disease: congenitalDisease }),
-          ...(bloodGroup && { blood_group: bloodGroup }),
+          drug_allergy: drugAllergy || "",
+          congenital_disease: congenitalDisease || "",
+          blood_group: bloodGroup || "",
         };
 
         const file: RegisterPayloadModel["file"] = {};
@@ -140,6 +144,7 @@ const RegisterPage = () => {
 
         const response = await registerApi(payload);
 
+
         if (response.success) {
           Alert.alert(t("notification"), t("register_success"), [
             { text: t("ok") },
@@ -147,11 +152,17 @@ const RegisterPage = () => {
           router.back();
         } else {
           if (response.code == 401) {
-            Alert.alert(t("notification"), t("register_id_card_exists"), [
+            let getResponse: CheckEmailResponse;
+
+            getResponse = JSON.parse(response.response);
+            Alert.alert(t("notification"), i18n.language === "th" ? getResponse.th : getResponse.en, [
               { text: t("ok") },
             ]);
           } else {
-            Alert.alert(t("notification"), response.response, [
+            let getResponse: CheckEmailResponse;
+
+            getResponse = JSON.parse(response.response);
+            Alert.alert(t("notification"), i18n.language === "th" ? getResponse.th : getResponse.en, [
               { text: t("ok") },
             ]);
           }
@@ -321,15 +332,12 @@ const RegisterPage = () => {
                   <Text className="mb-2 text-lg font-bold text-black dark:text-white">
                     {t("register_date_of_birth_label")}
                   </Text>
-                  <Pressable onPress={() => setShow(true)}>
-                    <View
-                      className="h-[56px] rounded-[24px] border-[1px] border-gray-900 focus:border-[#2196F3] focus:outline-none focus:ring-1 focus:ring-[#2196F3] placeholder:text-gray-400 p-4 
-                dark:border-gray-200  justify-center"
-                    >
-                      <Text className="dark:text-white">
-                        {date.toDateString()}
-                      </Text>
-                    </View>
+                  <Pressable className="h-[56px] rounded-[24px] border-[1px] border-gray-900 focus:border-[#2196F3] focus:outline-none focus:ring-1 focus:ring-[#2196F3] placeholder:text-gray-400 p-4 
+                dark:border-gray-200  justify-center" onPress={() => setShow(true)}>
+
+                    <Text className="dark:text-white">
+                      {date.toDateString()}
+                    </Text>
                   </Pressable>
 
                   {show && (
@@ -339,6 +347,7 @@ const RegisterPage = () => {
                       display={
                         Platform.OS === "android" ? "calendar" : "default"
                       }
+
                       onChange={(event, selectedDate) => {
                         setShow(false);
                         if (selectedDate) setDate(selectedDate);
