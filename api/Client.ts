@@ -72,8 +72,8 @@ export const postApi = async (
     return result;
   } catch (err: any) {
     result.response = err.response
-      ? `Error ${err.response.status}: ${JSON.stringify(err.response.data)}`
-      : `Exception: ${err.message}`;
+      ? `${JSON.stringify(err.response.data)}`
+      : `${err.message}`;
     result.code = err.response.status;
     return result;
   }
