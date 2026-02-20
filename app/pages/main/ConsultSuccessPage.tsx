@@ -1,10 +1,10 @@
-import { Ionicons } from "@expo/vector-icons";
-import { useTranslation } from "react-i18next";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { View, StyleSheet, TouchableOpacity, Text ,Button } from 'react-native';
 import LoadingComp from "@/components/LoadingComp";
 import Provider from "@/services/providerService";
+import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 
 import * as FileSystem from 'expo-file-system/legacy';
@@ -34,70 +34,69 @@ const ConsultSuccessPage = () => {
     consult_id: string;
     userName: string;
   }>();
-    console.log("roomId", consult_id, userName);
+  console.log("roomId", consult_id, userName);
   const router = useRouter();
   const { t, i18n } = useTranslation();
-  const currentLang = i18n.language; 
+  const currentLang = i18n.language;
 
-const handleGoHome = async () => {
-  try {
-    setLoading(true); // ✅ เริ่ม loading
+  const handleGoHome = async () => {
+    try {
+      setLoading(true);
 
-    const pdfUrl = `${Provider.HostAPI_URL}/pdf/treatment/${consult_id}/${currentLang}`;
-    console.log("PDF URL:", pdfUrl);
+      const pdfUrl = `${Provider.HostAPI_URL}/pdf/treatment/${consult_id}/${currentLang}`;
+      console.log("PDF URL:", pdfUrl);
 
-    const fileUri = FileSystem.documentDirectory + "temp.pdf";
+      const fileUri = FileSystem.documentDirectory + "temp.pdf";
 
-    const downloadResult = await FileSystem.downloadAsync(pdfUrl, fileUri);
-    console.log("Downloaded to:", downloadResult.uri);
+      const downloadResult = await FileSystem.downloadAsync(pdfUrl, fileUri);
+      console.log("Downloaded to:", downloadResult.uri);
 
-    await Print.printAsync({ uri: downloadResult.uri });
-  console.log("Print success");
+      await Print.printAsync({ uri: downloadResult.uri });
+      console.log("Print success");
 
-    router.replace(`/pages/main/HomePage`);
-  } catch (error) {
-    console.error("print pdf error:", error);
-    router.replace(`/pages/main/HomePage`);
-  } finally {
-      console.log("Print failed:",);
-    setLoading(false); // ✅ ปิด loading ไม่ว่าจะ error หรือไม่
-        router.replace(`/pages/main/HomePage`);
-  }
-};
+      router.replace(`/pages/main/HomePage`);
+    } catch (error) {
+      console.error("print pdf error:", error);
+      router.replace(`/pages/main/HomePage`);
+    } finally {
+      setLoading(false);
+      router.replace(`/pages/main/HomePage`);
+    }
+  };
 
-return (
-  <View style={styles.container}>
-    {loading && <LoadingComp />}  {/* ✅ Loading Overlay */}
+  return (
+    <View style={styles.container}>
+      {loading ? <View className="flex-1 w-full">
+        <LoadingComp />
+      </View> : <View style={styles.contentContainer}>
+        {/* Success Icon */}
+        <View style={styles.iconContainer}>
+          <Ionicons name="checkmark-circle" size={100} color={colors.blue500} />
+        </View>
 
-    <View style={styles.contentContainer}>
-      {/* Success Icon */}
-      <View style={styles.iconContainer}>
-        <Ionicons name="checkmark-circle" size={100} color={colors.blue500} />
-      </View>
+        <Text style={styles.title}>{t("consult_completed")}</Text>
+        <Text style={styles.message}>{t("consult_thank_you")}</Text>
 
-      <Text style={styles.title}>{t("consult_completed")}</Text>
-      <Text style={styles.message}>{t("consult_thank_you")}</Text>
+        <View style={styles.blessingsContainer}>
+          <Text style={styles.blessingsText}>{t("consult_blessing")}</Text>
+        </View>
 
-      <View style={styles.blessingsContainer}>
-        <Text style={styles.blessingsText}>{t("consult_blessing")}</Text>
-      </View>
+        <TouchableOpacity
+          style={styles.homeButton}
+          onPress={handleGoHome}
+          activeOpacity={0.8}
+          disabled={loading}   // ✅ กันกดซ้ำ
+        >
+          <Ionicons name="home" size={24} color={colors.white} style={styles.buttonIcon} />
+          <Text style={styles.homeButtonText}>
+            {loading ? t("loading") : t("consult_home_button")}
+          </Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.homeButton}
-        onPress={handleGoHome}
-        activeOpacity={0.8}
-        disabled={loading}   // ✅ กันกดซ้ำ
-      >
-        <Ionicons name="home" size={24} color={colors.white} style={styles.buttonIcon} />
-        <Text style={styles.homeButtonText}>
-          {loading ? t("loading") : t("consult_home_button")}
-        </Text>
-      </TouchableOpacity>
-
-      <Text style={styles.footerText}>{t("consult_footer")}</Text>
+        <Text style={styles.footerText}>{t("consult_footer")}</Text>
+      </View>}
     </View>
-  </View>
-);
+  );
 
 };
 
