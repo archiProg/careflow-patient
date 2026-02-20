@@ -3,6 +3,7 @@ import LoginFaceComp from "@/components/LoginFaceComp";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   BackHandler,
   Pressable,
@@ -13,6 +14,7 @@ import {
 
 const LoginPage = () => {
   const router = useRouter();
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const [statePage, setStatePage] = useState("main");
 
@@ -30,6 +32,11 @@ const LoginPage = () => {
 
   const handleBack = () => {
     setStatePage("main");
+  };
+
+
+  const handleLanguageSelector = () => {
+    router.push("/pages/settings/LanguagePage");
   };
 
   useEffect(() => {
@@ -54,36 +61,48 @@ const LoginPage = () => {
     <View className="flex-1">
       {statePage === "main" && (
         <View className="flex-1 w-full items-center justify-center">
+          <View className="flex flex-row items-center justify-end w-full px-4">
+            <Pressable
+              className="flex-row items-center justify-center bg-white px-3 py-2 rounded-full shadow"
+              onPress={() => handleLanguageSelector()}
+            >
+              <FontAwesome
+                name="globe"
+                size={24}
+                className=" text-black dark:text-white"
+              />
+            </Pressable>
+          </View>
           <View className="flex-1 h-1/2 items-center justify-center w-full px-4">
             <Text className="text-3xl font-semibold text-center text-black/80 dark:text-gray-500">
-              Welcome to CareFlow
+              {t("welcome_to_careflow")}
             </Text>
             <Text className="text-md font-semibold text-center text-black/80 dark:text-gray-500 mt-4">
-              A better way to stay connected
+              {t("welcome_to_careflow_description")}
             </Text>
           </View>
           <View className="flex-1 h-1/2 items-center justify-center w-full px-4">
             <Text className="text-xl font-semibold text-center text-black/80 dark:text-gray-500">
-              Authentication with
+              {t("authentication_with")}
             </Text>
             <Pressable
               onPress={handleIdCardPage}
               className="flex items-center justify-center w-full bg-blue-500 h-[56px] rounded-[24px] mt-4"
             >
-              <Text className="text-white text-md">ID Card</Text>
+              <Text className="text-white text-md">{t("id_card")}</Text>
             </Pressable>
             <Pressable
               onPress={handleFaceRecognitionPage}
               className="flex items-center justify-center w-full bg-white border-2 border-blue-500 h-[56px] rounded-[24px] mt-6"
             >
-              <Text className="text-blue-500 text-md">Face Recognition</Text>
+              <Text className="text-blue-500 text-md">{t("face_recognition")}</Text>
             </Pressable>
             <View className="flex flex-row items-center justify-center w-full gap-2 mt-4">
               <Text className="text-md font-semibold text-center text-black/80 dark:text-gray-500">
-                Don't have an account?
+                {t("don_t_have_an_account")}
               </Text>
               <Pressable onPress={handleSignUpPage}>
-                <Text className="text-blue-500">Sign Up</Text>
+                <Text className="text-blue-500">{t("sign_up")}</Text>
               </Pressable>
             </View>
           </View>
@@ -106,7 +125,7 @@ const LoginPage = () => {
               />
             </Pressable>
             <Text className="text-xl font-semibold text-center text-black/80 dark:text-gray-500">
-              Login with ID Card
+              {t("login_with_id_card")}
             </Text>
             <View className="w-[36px]" />
           </View>
