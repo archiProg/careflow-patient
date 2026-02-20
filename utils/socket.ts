@@ -26,7 +26,7 @@ export const getSocket = (): Socket => {
     socket.on("disconnect", (reason) => {
       console.log("🔌 Socket.io Disconnected:", reason);
     });
-    
+
     socket.onAny((event, ...args) => {
       console.log("📥 [SOCKET EVENT]", event);
       console.log("📦 payload:", args);
@@ -81,6 +81,14 @@ export const emitSocket = <TAck = any>(
     // setTimeout(() => reject(new Error("Socket timeout")), 10000);
   });
 };
+
+export const emitSocket2 = (event: string, data?: any) => {
+  const s = getSocket();
+  console.log("emitSocket", event, data);
+
+  s.emit(event, data);
+};
+
 
 export const closeSocket = () => {
   socket?.disconnect();
