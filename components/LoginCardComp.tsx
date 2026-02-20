@@ -10,7 +10,7 @@ import { useDispatch } from "react-redux";
 
 const LoginCardComp = () => {
   const router = useRouter();
-  const [idCard, setIDCard] = useState("1609900493012");
+  const [idCard, setIDCard] = useState("");
   const dispatch: Dispatch = useDispatch();
 
   const handleLogin = async () => {

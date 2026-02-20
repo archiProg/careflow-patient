@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
     Animated,
     Image,
@@ -36,6 +37,7 @@ interface FaceCaptureCameraProps {
 }
 
 export const FaceCaptureCamera: React.FC<FaceCaptureCameraProps> = ({ onCapture, IsActive }) => {
+    const { t } = useTranslation();
     const { hasPermission } = useCameraPermission();
     const device = useCameraDevice("front");
     const { width, height } = useWindowDimensions();
@@ -56,6 +58,15 @@ export const FaceCaptureCamera: React.FC<FaceCaptureCameraProps> = ({ onCapture,
     const [capturedImages, setCapturedImages] = useState<string[]>([]);
     const [selected, setSelected] = useState<number | null>(null);
     const isCapturingRef = useRef(false);
+
+    useEffect(() => {
+        setCapturedImages([]);
+        setSelected(null);
+        setStep("BLINK");
+        setBlinked(false);
+        setDistanceStatus("Good distance");
+        setCameraActive(false);
+    }, [IsActive]);
 
     useEffect(() => {
         VisionCamera.requestCameraPermission();
@@ -118,19 +129,6 @@ export const FaceCaptureCamera: React.FC<FaceCaptureCameraProps> = ({ onCapture,
         } finally {
             isCapturingRef.current = false;
         }
-    };
-
-    const getStepIcon = (currentStep: Step) => {
-        const icons = {
-            BLINK: "👁️",
-            LOOK_UP: "⬆️",
-            LOOK_DOWN: "⬇️",
-            RIGHT: "➡️",
-            LEFT: "⬅️",
-            CENTER: "🎯",
-            DONE: "✅",
-        };
-        return icons[currentStep];
     };
 
     const getStepText = (currentStep: Step) => {
@@ -234,50 +232,51 @@ export const FaceCaptureCamera: React.FC<FaceCaptureCameraProps> = ({ onCapture,
             {step === "DONE" ? (
                 <View style={{ flex: 1, padding: 16, backgroundColor: "white" }}>
                     <Text style={{ textAlign: "center", fontSize: 18, marginBottom: 16 }}>
-                        Select your best photo
+                        {t("select_your_best_photo")}
                     </Text>
 
-                    {selected !== null && capturedImages[selected] && (
-                        <Image
-                            source={{ uri: `file://${capturedImages[selected]}` }}
-                            className="w-20 h-32 rounded-lg mb-4"
-                        />
-                    )}
-
-                    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                        {capturedImages.map((uri, index) => (
-                            <Pressable
-                                key={index}
-                                onPress={() => setSelected(index)}
-                                style={{
-                                    borderWidth: 2,
-                                    borderRadius: 12,
-                                    borderColor: selected === index ? "green" : "transparent",
-                                }}
-                            >
-                                <Image
-                                    source={{ uri: `file://${uri}` }}
-                                    className="w-20 h-32 rounded-lg"
-                                />
-                            </Pressable>
-                        ))}
-                        <Pressable
-                            onPress={() => {
-                                if (selected !== null && capturedImages[selected]) {
-                                    onCapture(`file://${capturedImages[selected]}`);
-                                }
-                            }}
-                            style={{
-                                backgroundColor: "green",
-                                padding: 16,
-                                borderRadius: 8,
-                                alignItems: "center",
-                                marginTop: 16,
-                            }}
-                        >
-                            <Text style={{ color: "white" }}>Confirm</Text>
-                        </Pressable>
+                    <View className="flex-1 items-center justify-center ">
+                        {selected !== null && capturedImages[selected] && (
+                            <Image
+                                source={{ uri: `file://${capturedImages[selected]}` }}
+                                className="w-full h-full rounded-lg mb-4"
+                            />
+                        )}
                     </View>
+                    <View className="flex justify-end ">
+                        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                            {capturedImages.map((uri, index) => (
+                                <Pressable
+                                    key={index}
+                                    onPress={() => setSelected(index)}
+                                    style={{
+                                        borderWidth: 2,
+                                        borderRadius: 12,
+                                        borderColor: selected === index ? "green" : "transparent",
+                                    }}
+                                >
+                                    <Image
+                                        source={{ uri: `file://${uri}` }}
+                                        className="w-20 h-32 rounded-lg"
+                                    />
+                                </Pressable>
+                            ))}
+
+                        </View>
+                        <View >
+                            <Pressable
+                                onPress={() => {
+                                    if (selected !== null && capturedImages[selected]) {
+                                        onCapture(`file://${capturedImages[selected]}`);
+                                    }
+                                }}
+                                className="flex items-center justify-center w-full bg-blue-500 h-[56px] rounded-[24px] mt-4"
+                            >
+                                <Text className="text-white text-md">{t("confirm")}</Text>
+                            </Pressable>
+                        </View>
+                    </View>
+
                 </View>
             ) : (
                 <View className="flex-1">
