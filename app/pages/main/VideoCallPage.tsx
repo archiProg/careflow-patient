@@ -3,15 +3,15 @@ import LocalVideo from "@/components/rtc/localVideo";
 import VideoGrid from "@/components/rtc/videoGrid";
 import { user_role } from "@/constants/enums";
 import { usePeerConnection } from "@/hooks/usePeerConnection";
+import { PeerReducer } from "@/reducers/peerReducer";
 import Provider from "@/services/providerService";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { addPeer, removePeer, updatePeerMedia } from "@/store/peerSlice";
 import { UserConnected } from "@/types/SoketioResModel";
-import { emitSocket, isSocketConnected, listenSocket } from "@/utils/socket";
+import { emitSocket, emitSocket2, getSocket, isSocketConnected, listenSocket } from "@/utils/socket";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, View } from "react-native";
+import InCallManager from "react-native-incall-manager";
 import { mediaDevices, MediaStream } from "react-native-webrtc";
 
 const VideoCallPage = () => {
@@ -24,9 +24,9 @@ const VideoCallPage = () => {
   console.log("roomId", roomId, userName, audio, video);
 
   const { t } = useTranslation();
+  const socket = getSocket();
   const router = useRouter();
-  const dispatch = useAppDispatch();
-  const peers = useAppSelector((state) => state.peer);
+  const [peers, dispatch] = useReducer(PeerReducer, {});
   const [streamReady, setStreamReady] = useState(false);
   const peerConnections = useRef<Record<string, any>>({});
   const streamRef = useRef<MediaStream | null>(null);
@@ -42,6 +42,7 @@ const VideoCallPage = () => {
     handleIceCandidate,
     cleanupConnections,
   } = usePeerConnection({
+    socket,
     streamRef,
     peerConnections,
     dispatch,
@@ -61,23 +62,15 @@ const VideoCallPage = () => {
           stream.getTracks().map((t) => `${t.kind}: ${t.enabled}`),
         );
         streamRef.current = stream;
+        console.log("streamRef.current : ");
+        console.log(streamRef.current);
+
         setLocalStream(stream);
         setStreamReady(true);
       } catch (error) {
         console.error("Failed to get local stream:", error);
-        Alert.alert(
-          t("error_media_access"),
-          t("error_media_access_description"),
-          [
-            {
-              text: t("ok"),
-              onPress: () => router.back(),
-            },
-          ],
-        );
       }
     };
-
     init();
 
     setIsVideoOn(video === "1");
@@ -97,17 +90,17 @@ const VideoCallPage = () => {
         onPress: () => {
           setIsMicOn(false);
           setIsVideoOn(false);
-          emitSocket("doctor:end-case", { caseId: roomId });
+          emitSocket2("doctor:end-case", { caseId: roomId });
 
           if (Provider.Profile?.role == user_role.d) {
-        router.replace({
-                pathname: "/pages/main/ConsultSuccessPage",
-                params: {
-                  token: Provider.Token,
-                  consult_id: roomId,
-                  userName: Provider.Profile?.name ?? "Unknown",
-                },
-              });
+            router.replace({
+              pathname: "/pages/main/ConsultSuccessPage",
+              params: {
+                token: Provider.Token,
+                consult_id: roomId,
+                userName: Provider.Profile?.name ?? "Unknown",
+              },
+            });
           }
           cleanupConnections();
         },
@@ -126,13 +119,13 @@ const VideoCallPage = () => {
       }) => {
         console.log(caseId, endedBy);
         router.replace({
-                pathname: "/pages/main/ConsultSuccessPage",
-                params: {
-                  token: Provider.Token,
-                  consult_id: roomId,
-                  userName: Provider.Profile?.name ?? "Unknown",
-                },
-              });
+          pathname: "/pages/main/ConsultSuccessPage",
+          params: {
+            token: Provider.Token,
+            consult_id: roomId,
+            userName: Provider.Profile?.name ?? "Unknown",
+          },
+        });
       },
     });
 
@@ -162,7 +155,7 @@ const VideoCallPage = () => {
               onPress: () => {
                 console.log("❌ Permission rejected");
 
-                emitSocket("patient:permission_reject", {
+                emitSocket2("patient:permission_reject", {
                   caseId: roomId,
                   permissionId: payload.permissionId,
                 });
@@ -174,7 +167,7 @@ const VideoCallPage = () => {
               onPress: () => {
                 console.log("✅ Permission accepted");
 
-                emitSocket("patient:permission_accept", {
+                emitSocket2("patient:permission_accept", {
                   caseId: roomId,
                   permissionId: payload.permissionId,
                 });
@@ -192,6 +185,7 @@ const VideoCallPage = () => {
     return cleanup;
   }, []);
 
+  /* SOCKET & SIGNALING */
   useEffect(() => {
     if (!streamReady) return;
 
@@ -222,14 +216,13 @@ const VideoCallPage = () => {
 
           createPeer(p.id);
 
-          dispatch(
-            addPeer({
-              id: p.id,
-              username: p.username,
-              hasAudio: p.hasAudio,
-              hasVideo: p.hasVideo,
-            }),
-          );
+          dispatch({
+            type: "ADD_PEER",
+            id: p.id,
+            username: p.username,
+            hasAudio: p.hasAudio,
+            hasVideo: p.hasVideo,
+          });
 
           createOffer(p.id);
         });
@@ -248,7 +241,7 @@ const VideoCallPage = () => {
       joinRoom();
     }
 
-    const cleanup = listenSocket({
+    const cleanupSocket = listenSocket({
       connect: joinRoom,
 
       connect_error: (err: any) => {
@@ -270,7 +263,7 @@ const VideoCallPage = () => {
       "ice-candidate": handleIceCandidate,
 
       "peer-media-updated": ({ id, hasAudio, hasVideo }) => {
-        dispatch(updatePeerMedia({ id, hasAudio, hasVideo }));
+        dispatch({ type: "UPDATE_PEER_MEDIA", id, hasAudio, hasVideo });
       },
 
       "user-connected": ({ id, username, hasAudio, hasVideo }) => {
@@ -278,25 +271,50 @@ const VideoCallPage = () => {
 
         createPeer(id);
 
-        dispatch(
-          addPeer({
-            id,
-            username,
-            hasAudio,
-            hasVideo,
-          }),
-        );
+        dispatch({
+          type: "ADD_PEER",
+          id,
+          username,
+          hasAudio,
+          hasVideo,
+        });
       },
 
       "user-disconnected": (id: string) => {
         peerConnections.current[id]?.close();
         delete peerConnections.current[id];
-        dispatch(removePeer({ id }));
+        dispatch({ type: "REMOVE_PEER", id });
       },
     });
 
-    return cleanup;
+    try {
+      const manager: any = InCallManager;
+      if (manager && typeof manager.start === "function") {
+        manager.start({ media: "video" });
+        if (typeof manager.setSpeakerphoneOn === "function") {
+          manager.setSpeakerphoneOn(true);
+        }
+        console.log("🔊 InCallManager started (Speaker: ON)");
+      }
+    } catch (e: any) {
+      console.warn("❌ InCallManager start failed:", e.message);
+    }
+
+    return () => {
+      cleanupSocket();
+
+      try {
+        const manager: any = InCallManager;
+        if (manager && typeof manager.stop === "function") {
+          manager.stop();
+          console.log("🔇 InCallManager stopped");
+        }
+      } catch (e) {
+        console.warn("⚠️ Failed to stop InCallManager");
+      }
+    };
   }, [streamReady, roomId, userName, audio, video]);
+
 
   return (
     <View className="flex-1 bg-black h-full">

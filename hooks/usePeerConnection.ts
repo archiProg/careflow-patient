@@ -1,6 +1,4 @@
-import { AppDispatch } from "@/store/index";
-import { removePeer, setPeerStream } from "@/store/peerSlice";
-import { emitSocket } from "@/utils/socket";
+import { PeerAction } from "@/types/PeerModel";
 import React, { useCallback, useRef } from "react";
 import {
     MediaStream,
@@ -10,12 +8,14 @@ import {
 } from "react-native-webrtc";
 
 interface UsePeerConnectionProps {
+    socket: any;
     streamRef: React.MutableRefObject<MediaStream | null>;
     peerConnections: React.MutableRefObject<Record<string, RTCPeerConnection>>;
-    dispatch: AppDispatch;
+    dispatch: React.Dispatch<PeerAction>;
 }
 
 export const usePeerConnection = ({
+    socket,
     streamRef,
     peerConnections,
     dispatch,
@@ -40,7 +40,7 @@ export const usePeerConnection = ({
             (peer as any).addEventListener("icecandidate", (event: any) => {
                 if (event.candidate) {
                     console.log(`📤 Sending ICE candidate to ${peerId}`);
-                    emitSocket("ice-candidate", {
+                    socket.emit("ice-candidate", {
                         target: peerId,
                         candidate: event.candidate,
                     });
@@ -53,10 +53,11 @@ export const usePeerConnection = ({
                 const [remoteStream] = (event as any).streams;
                 if (!remoteStream) return;
 
-                dispatch(setPeerStream({
+                dispatch({
+                    type: "SET_PEER_STREAM",
                     id: peerId,
-                    stream: remoteStream
-                }));
+                    stream: remoteStream as any,
+                });
             });
 
             /* CONNECTION STATE */
@@ -68,14 +69,14 @@ export const usePeerConnection = ({
                 ) {
                     peer.close();
                     delete peerConnections.current[peerId];
-                    dispatch(removePeer({ id: peerId }));
+                    dispatch({ type: "REMOVE_PEER", id: peerId });
                 }
             });
 
             peerConnections.current[peerId] = peer;
             return peer;
         },
-        [dispatch]
+        [socket, dispatch]
     );
 
     /* ---------------- CREATE OFFER ---------------- */
@@ -87,12 +88,12 @@ export const usePeerConnection = ({
             const offer = await peer.createOffer();
             await peer.setLocalDescription(offer);
 
-            emitSocket("offer", {
+            socket.emit("offer", {
                 target: peerId,
                 sdp: peer.localDescription,
             });
         },
-        []
+        [socket]
     );
 
     /* ---------------- HANDLE OFFER ---------------- */
@@ -121,7 +122,7 @@ export const usePeerConnection = ({
                 const answer = await peer.createAnswer();
                 await peer.setLocalDescription(answer);
 
-                emitSocket("answer", {
+                socket.emit("answer", {
                     target: caller,
                     sdp: peer.localDescription,
                 });
@@ -132,7 +133,7 @@ export const usePeerConnection = ({
                 signalingLocks.current[caller] = false;
             }
         },
-        [createPeer]
+        [createPeer, socket]
     );
 
     /* ---------------- HANDLE ANSWER ---------------- */

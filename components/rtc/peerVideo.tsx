@@ -1,22 +1,19 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { memo } from "react";
 import { Text, View } from "react-native";
-import type { MediaStream } from "react-native-webrtc";
-import { RTCView } from "react-native-webrtc";
-
-
+import { MediaStream, RTCView } from "react-native-webrtc";
 
 interface PeerVideoProps {
-  peerID: string;
-  peerUsername: string;
+  peerID?: string;
+  peerUsername?: string;
   stream?: MediaStream | null;
   hasAudio: boolean;
   hasVideo: boolean;
 }
 
 function PeerVideo({
-  peerID,
-  peerUsername,
+  peerID = "",
+  peerUsername = "",
   stream,
   hasAudio,
   hasVideo,

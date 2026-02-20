@@ -1,12 +1,10 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import authReducer from "./authSlice";
 import languageReducer from "./languageSlice";
-import peerReducer from "./peerSlice";
 
 const rootReducer = combineReducers({
     language: languageReducer,
     auth: authReducer,
-    peer: peerReducer,
 });
 
 export const store = configureStore({

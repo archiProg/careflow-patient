@@ -1,8 +1,9 @@
-import type { MediaStream } from "react-native-webrtc";
+// src/types/peer.ts
+import { MediaStream } from "react-native-webrtc";
 
 export interface PeerMedia {
-    username?: string;
-    stream?: MediaStream | null;
+    stream: MediaStream | null;
+    username: string;
     hasAudio: boolean;
     hasVideo: boolean;
 }
