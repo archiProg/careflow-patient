@@ -103,7 +103,13 @@ const DoctorMatchStepPage = () => {
                     {
                         text: "ตกลง",
                         onPress: () => {
-                            router.replace(`/pages/main/ConsultSuccessPage`);
+                            router.replace({
+                                pathname: "/pages/main/ConsultSuccessPage",
+                                params: {
+                                    consult_id: caseId,
+                                    userName: "",
+                                },
+                            });
                         },
                     },
                 ]);
