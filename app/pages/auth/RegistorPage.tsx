@@ -41,6 +41,7 @@ const RegisterPage = () => {
   const [show, setShow] = useState(false);
   const [gender, setGender] = useState<number>(0);
   const [statusRegistor, setStatusRegistor] = useState<number>(1);
+  const [beforeStatusRegistor, setBeforeStatusRegistor] = useState<number>(1);
   const [isLoading, setIsLoading] = useState(false);
   const [image, setImage] = useState<string | null>(null);
   const [iDCard, setIDCard] = useState<string>("9898989898989");
@@ -107,9 +108,16 @@ const RegisterPage = () => {
         return;
       }
 
-      setStatusRegistor(2);
+
+      if (image) {
+        setBeforeStatusRegistor(1);
+        setStatusRegistor(3);
+      } else {
+        setBeforeStatusRegistor(statusRegistor);
+        setStatusRegistor(2);
+      }
     }
-    if (statusRegistor == 2) {
+    if (statusRegistor == 3) {
       if (!image) {
         Alert.alert(t("notification"), t("register_validation_image"));
         return;
@@ -175,25 +183,25 @@ const RegisterPage = () => {
     }
   };
 
-  const pickFromGallery = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert(
-        t("register_permission_denied"),
-        t("register_cannot_access_gallery"),
-      );
-      return;
-    }
+  // const pickFromGallery = async () => {
+  //   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  //   if (status !== "granted") {
+  //     Alert.alert(
+  //       t("register_permission_denied"),
+  //       t("register_cannot_access_gallery"),
+  //     );
+  //     return;
+  //   }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: "images",
-      quality: 1,
-    });
+  //   const result = await ImagePicker.launchImageLibraryAsync({
+  //     mediaTypes: "images",
+  //     quality: 1,
+  //   });
 
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
-    }
-  };
+  //   if (!result.canceled) {
+  //     setImage(result.assets[0].uri);
+  //   }
+  // };
 
   const pickFromCamera = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -220,8 +228,15 @@ const RegisterPage = () => {
       t("register_select_image"),
       t("register_choose_source"),
       [
-        { text: t("register_camera"), onPress: pickFromCamera },
-        { text: t("register_gallery"), onPress: pickFromGallery },
+        {
+          text: "ถ่ายรูปใหม่", onPress: () => {
+            setBeforeStatusRegistor(3);
+            setStatusRegistor(2);
+            console.log(beforeStatusRegistor);
+            console.log(statusRegistor);
+          }
+        },
+        // { text: t("register_gallery"), onPress: pickFromGallery },
         { text: t("cancel"), style: "cancel" },
       ],
       { cancelable: true },
@@ -240,7 +255,9 @@ const RegisterPage = () => {
     if (statusRegistor == 1) {
       router.replace("/pages/auth/LoginPage");
     } else {
-      setStatusRegistor(1);
+      console.log(beforeStatusRegistor);
+
+      setStatusRegistor(beforeStatusRegistor);
     }
   };
 
@@ -249,7 +266,12 @@ const RegisterPage = () => {
       if (statusRegistor === 1) {
         router.replace("/pages/auth/LoginPage");
       } else {
-        setStatusRegistor(1);
+        if (beforeStatusRegistor === 3) {
+          setStatusRegistor(1);
+        } else {
+          setStatusRegistor(beforeStatusRegistor);
+        }
+
       }
       return true;
     };
@@ -286,7 +308,7 @@ const RegisterPage = () => {
 
           <View className="flex items-end px-3">
             <Text className="text-black dark:text-white">
-              {statusRegistor}/2
+              {statusRegistor > 2 ? 2 : statusRegistor}/2
             </Text>
           </View>
         </View>
@@ -344,6 +366,8 @@ const RegisterPage = () => {
                     <DateTimePicker
                       value={date}
                       mode="date"
+                      locale={`${i18n.language}-${i18n.language.toUpperCase()}`}
+                      maximumDate={new Date()}
                       display={
                         Platform.OS === "android" ? "calendar" : "default"
                       }
@@ -556,11 +580,13 @@ const RegisterPage = () => {
       </View>
 
 
-      <View className={`absolute w-full h-full ${(image == null && statusRegistor === 2) ? "" : "hidden"}`}>
+      <View className={`absolute w-full h-full ${(statusRegistor === 2) ? "" : "hidden"}`}>
         <FaceCaptureCamera
-          IsActive={image == null && statusRegistor === 2}
+          IsActive={statusRegistor === 2}
           onCapture={(uri: string) => {
             setImage(uri);
+            setBeforeStatusRegistor(1);
+            setStatusRegistor(3);
           }}
         />
       </View>
