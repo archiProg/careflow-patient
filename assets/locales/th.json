@@ -176,5 +176,15 @@
   "register_gallery": "แกลเลอรี่",
   "register_permission_denied": "ไม่ได้รับอนุญาต",
   "register_cannot_access_gallery": "ไม่สามารถเข้าถึงแกลเลอรี่",
-  "register_cannot_access_camera": "ไม่สามารถเข้าถึงกล้อง"
+  "register_cannot_access_camera": "ไม่สามารถเข้าถึงกล้อง",
+  "select_your_best_photo": "เลือกรูปภาพที่ดีที่สุดของคุณ",
+  "confirm": "ยืนยัน",
+  "welcome_to_careflow": "ยินดีต้อนรับสู่ CareFlow",
+  "welcome_to_careflow_description": "",
+  "authentication_with": "การตรวจสอบตัวตนด้วย",
+  "id_card": "บัตรประชาชน",
+  "face_recognition": "การตรวจสอบตัวตนด้วยใบหน้า",
+  "don_t_have_an_account": "ไม่มีบัญชีใช้ไหม?",
+  "sign_up": "สมัครสมาชิก",
+  "login_with_id_card": "เข้าสู่ระบบด้วยบัตรประชาชน"
 }

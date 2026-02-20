@@ -178,5 +178,15 @@
   "register_gallery": "Gallery",
   "register_permission_denied": "Permission denied",
   "register_cannot_access_gallery": "Cannot access gallery",
-  "register_cannot_access_camera": "Cannot access camera"
+  "register_cannot_access_camera": "Cannot access camera",
+  "select_your_best_photo": "Select your best photo",
+  "confirm": "Confirm",
+  "welcome_to_careflow": "Welcome to CareFlow",
+  "welcome_to_careflow_description": "A better way to stay connected",
+  "authentication_with": "Authentication with",
+  "id_card": "ID Card",
+  "face_recognition": "Face Recognition",
+  "don_t_have_an_account": "Don't have an account?",
+  "sign_up": "Sign Up",
+  "login_with_id_card": "Login with ID Card"
 }
