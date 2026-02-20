@@ -76,7 +76,7 @@ const LanguagePage = () => {
 
   return (
     <View className="flex-1 h-full dark:bg-gray-900">
-      <View className="flex w-full p-5 justify-start items-start">
+      <View className="flex w-full px-4 justify-start items-start">
         <Pressable
           className="flex-row items-center justify-start px-3 rounded-full"
           onPress={() => {
