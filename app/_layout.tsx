@@ -10,7 +10,7 @@ const RootLayout = () => {
     <Provider store={store}>
       <View className="flex-1 bg-white dark:bg-gray-900">
         <StatusBar style="dark" />
-        <View className="flex-1 w-full my-10">
+        <View className="flex-1 w-full my-10 ">
           <Slot />
         </View>
       </View>

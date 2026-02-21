@@ -3,6 +3,7 @@ import LoadingComp from "@/components/LoadingComp";
 import MatchingLoader from "@/components/MatchingLoader";
 import ReadyDoctorComp from "@/components/ReadyDoctorComp";
 import Provider from "@/services/providerService";
+import { setConsultResume } from "@/store/recall";
 import { DoctorConsultModel, DoctorInfoConsultModel } from "@/types/DoctorConsultModel";
 import { PatientRequestAck } from "@/types/SoketioResModel";
 import { emitSocket, listenSocket } from "@/utils/socket";
@@ -11,6 +12,7 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, Pressable, ScrollView, Text, useColorScheme, View } from "react-native";
+import { useDispatch } from "react-redux";
 
 const DoctorMatchStepPage = () => {
     const router = useRouter();
@@ -24,6 +26,7 @@ const DoctorMatchStepPage = () => {
     const [title, setTitle] = useState(t('select_specialty_to_consult'));
     const [finding, setFinding] = useState(false);
     const [doctorInfo, setDoctorInfo] = useState<DoctorInfoConsultModel | null>(null);
+    const dispatch = useDispatch();
 
     const handleReqCase = async (id: number) => {
         setLoading(true);
@@ -77,6 +80,10 @@ const DoctorMatchStepPage = () => {
                 doctor_info: DoctorInfoConsultModel;
             }) => {
                 setDoctorInfo(doctor_info);
+                dispatch(setConsultResume({
+                    caseId,
+                    doctorInfo: doctor_info,
+                }));
                 setStep("readyDoctor");
                 setTimeout(() => {
                     router.replace({
