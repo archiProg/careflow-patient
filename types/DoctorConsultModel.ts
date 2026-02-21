@@ -18,4 +18,12 @@ interface DoctorInfoConsultModel {
     years_of_experience: string
 }
 
-export { DoctorConsultModel, DoctorInfoConsultModel };
+
+type CaseResumePayload = {
+    caseId: string;
+    doctorInfo: DoctorInfoConsultModel;
+};
+
+
+export { CaseResumePayload, DoctorConsultModel, DoctorInfoConsultModel };
+
