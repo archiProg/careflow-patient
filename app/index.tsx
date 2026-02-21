@@ -3,17 +3,19 @@ import { getDoctorSpecialty } from "@/api/UserApi";
 import LoadingComp from "@/components/LoadingComp";
 import { loadLanguage } from "@/hooks/useI18n";
 import Provider from "@/services/providerService";
-import { DoctorSpecialtyModel } from "@/types/DoctorConsultModel";
+import { DoctorConsultModel } from "@/types/DoctorConsultModel";
 import { ProfileModel } from "@/types/ProfileModel";
 import { getJwtExp } from "@/utils/jwt";
-import { closeSocket, getSocket } from "@/utils/socket";
+import { closeSocket } from "@/utils/socket";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import { Alert, View } from "react-native";
+import { useDispatch } from "react-redux";
 
 export default function StartupPage() {
   const router = useRouter();
   const token = Provider.Token;
+  const dispatch = useDispatch();
 
   const initApp = async (): Promise<void> => {
     await loadLanguage();
@@ -59,7 +61,7 @@ export default function StartupPage() {
   const handleDoctorSpecialty = async () => {
     try {
       const response = await getDoctorSpecialty(token);
-      let getResponse: DoctorSpecialtyModel[];
+      let getResponse: DoctorConsultModel[];
       if (response.success) {
         if (response.response) {
           getResponse = JSON.parse(response.response);
@@ -82,7 +84,7 @@ export default function StartupPage() {
 
   useEffect(() => {
     if (token) {
-      getSocket();
+
       handleAuthenMe();
       handleDoctorSpecialty();
     }
