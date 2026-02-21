@@ -186,5 +186,6 @@
   "face_recognition": "การตรวจสอบตัวตนด้วยใบหน้า",
   "don_t_have_an_account": "ไม่มีบัญชีใช้ไหม?",
   "sign_up": "สมัครสมาชิก",
-  "login_with_id_card": "เข้าสู่ระบบด้วยบัตรประชาชน"
+  "login_with_id_card": "เข้าสู่ระบบด้วยบัตรประชาชน",
+  "home-screen-incomplete-consultation": "การปรึกษาที่ค้างอยู่"
 }
