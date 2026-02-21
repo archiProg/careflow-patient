@@ -1,21 +1,21 @@
 import { loginIdCardApi } from "@/api/AuthApi";
+import nativeSmartcard from "@/hooks/nativeSmartcard";
 import Provider from "@/services/providerService";
 import { setToken } from "@/store/authSlice";
 import { LoginResponseModel } from "@/types/LoginModel";
+import { FontAwesome } from "@expo/vector-icons";
 import { Dispatch } from "@reduxjs/toolkit";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-  Alert,
   NativeEventEmitter,
   NativeModules,
   Pressable,
   Text,
   TextInput,
-  View,
+  View
 } from "react-native";
 import { useDispatch } from "react-redux";
-import nativeSmartcard from "@/hooks/nativeSmartcard";
 
 const { SmartcardModule } = NativeModules;
 const smartcardEmitter = new NativeEventEmitter(SmartcardModule);
@@ -27,7 +27,7 @@ const LoginCardComp = () => {
   const [idCard, setIDCard] = useState("");
   const [status, setStatus] = useState("กรุณาเสียบบัตรประชาชน");
 
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isLoggingInRef = useRef(false);
   const lastIdRef = useRef<string | null>(null);
   const waitingForRemoveRef = useRef(false);
@@ -132,13 +132,24 @@ const LoginCardComp = () => {
     <View className="flex-1 w-full items-center justify-center px-6">
       <Text className="text-lg font-bold mb-4">{status}</Text>
 
-      <TextInput
-        className="h-[56px] w-full mb-4 rounded-[24px] border-[1px] border-gray-900 p-4"
-        placeholder="ID Card"
-        keyboardType="numeric"
-        value={idCard}
-        onChangeText={setIDCard}
-      />
+      <View className="flex flex-row w-full gap-2">
+        <TextInput
+          className="flex-1 h-[56px]  mb-4 rounded-[24px] border-[1px] border-gray-900 p-4"
+          placeholder="ID Card"
+          keyboardType="numeric"
+          value={idCard}
+          onChangeText={setIDCard}
+        />
+        <Pressable
+          onPress={() => readSmartcard()}
+          className="h-[56px] items-center justify-center rounded-full"
+        >
+          <FontAwesome
+            name="refresh"
+            size={20} color="#6B7280"
+          />
+        </Pressable>
+      </View>
 
       <Pressable
         onPress={() => handleLogin(idCard)}
@@ -147,12 +158,7 @@ const LoginCardComp = () => {
         <Text className="text-white">Login</Text>
       </Pressable>
 
-            <Pressable
-        onPress={() => readSmartcard()}
-        className="h-[56px] w-full items-center justify-center rounded-full bg-blue-500"
-      >
-        <Text className="text-white">Refresh</Text>
-      </Pressable>
+
     </View>
   );
 };
