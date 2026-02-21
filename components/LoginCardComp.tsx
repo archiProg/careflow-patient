@@ -4,72 +4,155 @@ import { setToken } from "@/store/authSlice";
 import { LoginResponseModel } from "@/types/LoginModel";
 import { Dispatch } from "@reduxjs/toolkit";
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import { Alert, Pressable, Text, TextInput, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import {
+  Alert,
+  NativeEventEmitter,
+  NativeModules,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { useDispatch } from "react-redux";
+import nativeSmartcard from "@/hooks/nativeSmartcard";
+
+const { SmartcardModule } = NativeModules;
+const smartcardEmitter = new NativeEventEmitter(SmartcardModule);
 
 const LoginCardComp = () => {
   const router = useRouter();
-  const [idCard, setIDCard] = useState("");
   const dispatch: Dispatch = useDispatch();
 
-  const handleLogin = async () => {
+  const [idCard, setIDCard] = useState("");
+  const [status, setStatus] = useState("กรุณาเสียบบัตรประชาชน");
+
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isLoggingInRef = useRef(false);
+  const lastIdRef = useRef<string | null>(null);
+  const waitingForRemoveRef = useRef(false);
+
+  // 🔥 LOGIN FUNCTION
+  const handleLogin = async (cardId: string) => {
+    if (isLoggingInRef.current) return;
+    if (waitingForRemoveRef.current) return;
+
+    if (lastIdRef.current === cardId) return;
+
     try {
+      isLoggingInRef.current = true;
+      lastIdRef.current = cardId;
+
+      setStatus("กำลังเข้าสู่ระบบ...");
+
       const payload = {
         action: "id_card",
-        content: {
-          id_card: idCard,
-        },
+        content: { id_card: cardId },
       };
-      let getResponse: LoginResponseModel;
 
       const response = await loginIdCardApi(payload);
+
       if (response.success) {
-        getResponse = JSON.parse(response.response);
+        const getResponse: LoginResponseModel = JSON.parse(response.response);
+
         if (getResponse.token) {
           dispatch(setToken(getResponse.token));
           Provider.setToken(getResponse.token);
+
+          stopPolling();
           router.back();
-        } else {
-          Alert.alert("Login failed", "Please try again");
+          return;
         }
-      } else {
-        Alert.alert("Login failed", "Please try again");
       }
-    } catch (error: any) {
-      Alert.alert("Login failed", "Please try again");
+
+      // ❌ login fail
+      setStatus("เข้าสู่ระบบไม่สำเร็จ กรุณาถอดบัตรแล้วเสียบใหม่");
+
+      waitingForRemoveRef.current = true;
+      stopPolling();
+    } catch {
+      setStatus("เกิดข้อผิดพลาด กรุณาถอดบัตรแล้วเสียบใหม่");
+      waitingForRemoveRef.current = true;
+      stopPolling();
+    } finally {
+      isLoggingInRef.current = false;
     }
   };
 
+  // 🔥 READ CARD
+  const readSmartcard = async () => {
+    try {
+      setStatus("กำลังอ่านบัตร...");
+      const result = await nativeSmartcard.readSmartcardData();
+
+      if (result?.citizenId) {
+        setIDCard(result.citizenId);
+        handleLogin(result.citizenId);
+      }
+    } catch {
+      setStatus("กรุณาเสียบบัตรประชาชน");
+    }
+  };
+
+  // 🔥 START POLLING
+  const startPolling = () => {
+    if (intervalRef.current) return;
+
+    intervalRef.current = setInterval(() => {
+      readSmartcard();
+    }, 2000);
+  };
+
+  const stopPolling = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  };
+
+  // 🔥 EVENT LISTENER
+  useEffect(() => {
+    const usbListener = smartcardEmitter.addListener("USB_CONNECTED", () => {
+      setStatus("พบเครื่องอ่านบัตร");
+      startPolling();
+    });
+
+    const cardListener = smartcardEmitter.addListener("CARD_DETECTED", () => {
+      readSmartcard();
+    });
+
+    return () => {
+      usbListener.remove();
+      cardListener.remove();
+      stopPolling();
+    };
+  }, []);
+
   return (
-    <View className="flex-1 w-full h-full items-center justify-center">
-      <View className="w-full h-1/2 items-center justify-center">
-        <View className="w-full h-full items-center justify-start">
-          <View className="w-full">
-            <Text className="text-md font-bold text-black my-[16px] dark:text-white">
-              ID Card
-            </Text>
-            <TextInput
-              className="h-[56px] mb-[16px] rounded-[24px]  border-[1px] border-gray-900 focus:border-[#2196F3] focus:outline-none focus:ring-1 focus:ring-[#2196F3] placeholder:text-gray-400 p-4 
-                dark:border-gray-200 dark:text-white"
-              placeholder="ID Card"
-              keyboardType="numeric"
-              value={idCard}
-              onChangeText={setIDCard}
-            />
-          </View>
-        </View>
-      </View>
-      <View className="w-full h-1/2 items-center justify-center mb-10">
-        <View className="w-full h-full items-center justify-end">
-          <Pressable
-            onPress={() => handleLogin()}
-            className="flex h-[56px] w-full items-center justify-center px-3 rounded-full bg-blue-500"
-          >
-            <Text className="text-white text-md">Login</Text>
-          </Pressable>
-        </View>
-      </View>
+    <View className="flex-1 w-full items-center justify-center px-6">
+      <Text className="text-lg font-bold mb-4">{status}</Text>
+
+      <TextInput
+        className="h-[56px] w-full mb-4 rounded-[24px] border-[1px] border-gray-900 p-4"
+        placeholder="ID Card"
+        keyboardType="numeric"
+        value={idCard}
+        onChangeText={setIDCard}
+      />
+
+      <Pressable
+        onPress={() => handleLogin(idCard)}
+        className="h-[56px] w-full items-center justify-center rounded-full bg-blue-500"
+      >
+        <Text className="text-white">Login</Text>
+      </Pressable>
+
+            <Pressable
+        onPress={() => readSmartcard()}
+        className="h-[56px] w-full items-center justify-center rounded-full bg-blue-500"
+      >
+        <Text className="text-white">Refresh</Text>
+      </Pressable>
     </View>
   );
 };

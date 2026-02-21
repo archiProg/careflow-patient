@@ -1,0 +1,4 @@
+<resources>
+    <!-- Replace vendor-id and product-id with actual values for Zoweetek CCID Smartcard Reader -->
+    <usb-device vendor-id="1423" product-id="38208" />
+</resources>
