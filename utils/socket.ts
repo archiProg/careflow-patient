@@ -27,10 +27,10 @@ export const getSocket = (): Socket => {
       console.log("🔌 Socket.io Disconnected:", reason);
     });
 
-    socket.onAny((event, ...args) => {
-      console.log("📥 [SOCKET EVENT]", event);
-      console.log("📦 payload:", args);
-    });
+    // socket.onAny((event, ...args) => {
+    //   console.log("[SOCKET EVENT]", event);
+    //   console.log("payload:", args);
+    // });
   }
 
   return socket;
