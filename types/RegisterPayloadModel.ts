@@ -1,7 +1,7 @@
 export interface RegisterPayloadModel {
     head: {
         email: string;
-        password: string;
+        // password: string;
         name: string;
         birthday: string;
         sex: string;

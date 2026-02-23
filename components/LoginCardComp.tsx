@@ -41,7 +41,7 @@ const LoginCardComp = () => {
 
     try {
       isLoggingInRef.current = true;
-      lastIdRef.current = cardId;
+      lastIdRef.current = cardId;      
 
       setStatus("กำลังเข้าสู่ระบบ...");
 
