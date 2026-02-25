@@ -133,7 +133,7 @@ const LoginPage = () => {
         </View>
       )}
       {statePage === "faceRecognition" && (
-        <View className="flex-1 w-full h-full px-4">
+        <View className="flex-1 w-full h-full">
           <View className="flex w-full py-4 justify-start items-start">
             <Pressable
               className="flex-row items-center justify-start px-3 rounded-full"

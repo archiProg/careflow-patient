@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Text,
   View,
-  useWindowDimensions,
   TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -39,8 +38,11 @@ const LoginFaceComp = () => {
   const device = useCameraDevice("front");
   const cameraRef = useRef<VisionCamera>(null);
 
-  const { width, height } = useWindowDimensions();
-  const ovalSize = width * 0.7;
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+
+  const ovalSize = containerSize.width * 0.8;
+  const ovalTop = (containerSize.height - ovalSize) / 2;
+  const ovalLeft = (containerSize.width - ovalSize) / 2;
 
   const [blinked, setBlinked] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -83,10 +85,10 @@ const LoginFaceComp = () => {
       landmarkMode: "all",
       classificationMode: "all",
       trackingEnabled: false,
-      windowWidth: width,
-      windowHeight: height,
+      windowWidth: containerSize.width,
+      windowHeight: containerSize.height,
     }),
-    [width, height]
+    [containerSize]
   );
 
   /* ================= Start Scan ================= */
@@ -171,7 +173,7 @@ const LoginFaceComp = () => {
     try {
       const response = await loginFaceApi(base64);
       console.log(response);
-      
+
       if (response.success) {
         const getResponse: LoginResponseModel = JSON.parse(response.response);
 
@@ -197,119 +199,99 @@ const LoginFaceComp = () => {
 
   if (!hasPermission || !device) {
     return (
-      <Text style={{ marginTop: 50, textAlign: "center" }}>
-        Camera unavailable
-      </Text>
+      <Text className="mt-12 text-center">Camera unavailable</Text>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
-      <Camera
-        ref={cameraRef}
-        style={StyleSheet.absoluteFill}
-        device={device}
-        isActive={!loading}
-        photo
-        faceDetectionCallback={handleFacesDetection}
-        faceDetectionOptions={faceDetectionOptions}
-      />
-
-      {/* ===== Overlay ===== */}
-      <View style={StyleSheet.absoluteFill}>
-        <Svg width={width} height={height}>
-          <Mask id="mask">
-            <Rect width={width} height={height} fill="white" />
-            <Rect
-              x={(width - ovalSize) / 2}
-              y={(height - ovalSize) / 2}
-              width={ovalSize}
-              height={ovalSize}
-              rx={ovalSize / 2}
-              ry={ovalSize / 2}
-              fill="black"
-            />
-          </Mask>
-
-          <Rect
-            width={width}
-            height={height}
-            fill="rgba(0,0,0,0.7)"
-            mask="url(#mask)"
-          />
-        </Svg>
-
-        {/* วงรีเปลี่ยนสี */}
-        <View
-          style={{
-            position: "absolute",
-            top: (height - ovalSize) / 2,
-            left: (width - ovalSize) / 2,
-            width: ovalSize,
-            height: ovalSize,
-            borderRadius: ovalSize / 2,
-            borderWidth: 4,
-            borderColor: faceDetected ? "#00FF88" : "#FFFFFF",
-          }}
-        />
-      </View>
-
-      {/* Status */}
+    <SafeAreaView className="flex-1 bg-black">
       <View
-        style={{
-          position: "absolute",
-          bottom: 120,
-          width: "100%",
-          alignItems: "center",
+        className="flex-1"
+        onLayout={(e) => {
+          const { width, height } = e.nativeEvent.layout;
+          setContainerSize({ width, height });
         }}
       >
-        <Text style={{ color: "white", fontSize: 16 }}>{status}</Text>
+        {containerSize.width > 0 && (
+          <>
+            <Camera
+              ref={cameraRef}
+              style={StyleSheet.absoluteFill}
+              device={device}
+              isActive={!loading}
+              photo
+              faceDetectionCallback={handleFacesDetection}
+              faceDetectionOptions={faceDetectionOptions}
+            />
+
+            {/* ===== Overlay (pointerEvents="none" ไม่บัง Button ด้านล่าง) ===== */}
+            <View style={StyleSheet.absoluteFill} pointerEvents="none">
+              <Svg width={containerSize.width} height={containerSize.height}>
+                <Mask id="mask">
+                  <Rect width={containerSize.width} height={containerSize.height} fill="white" />
+                  <Rect
+                    x={ovalLeft}
+                    y={ovalTop}
+                    width={ovalSize}
+                    height={ovalSize}
+                    rx={ovalSize / 2}
+                    ry={ovalSize / 2}
+                    fill="black"
+                  />
+                </Mask>
+                <Rect
+                  width={containerSize.width}
+                  height={containerSize.height}
+                  fill="rgba(0,0,0,0.7)"
+                  mask="url(#mask)"
+                />
+              </Svg>
+
+              {/* วงรีเปลี่ยนสี — ต้องใช้ inline เพราะค่า dynamic จาก onLayout */}
+              <View
+                style={{
+                  position: "absolute",
+                  top: ovalTop,
+                  left: ovalLeft,
+                  width: ovalSize,
+                  height: ovalSize,
+                  borderRadius: ovalSize / 2,
+                  borderWidth: 4,
+                  borderColor: faceDetected ? "#00FF88" : "#FFFFFF",
+                }}
+              />
+            </View>
+
+            {/* Status */}
+            <View className="absolute bottom-[18%] w-full items-center" pointerEvents="none">
+              <Text className="text-white text-base">{status}</Text>
+            </View>
+
+            {/* Start Button */}
+            {!isScanning && !loading && (
+              <View className="absolute bottom-[6%] w-full items-center" pointerEvents="box-none">
+                <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+                  <TouchableOpacity
+                    onPress={startScan}
+                    className="bg-blue-500 px-8 py-4 rounded-[30px]"
+                  >
+                    <Text className="text-white text-base font-bold">
+                      เริ่มสแกนใบหน้า
+                    </Text>
+                  </TouchableOpacity>
+                </Animated.View>
+              </View>
+            )}
+
+            {/* Loading */}
+            {loading && (
+              <View className="absolute inset-0 bg-white/70 justify-center items-center">
+                <LoadingComp />
+              </View>
+            )}
+          </>
+        )}
       </View>
-
-      {/* Start Button */}
-      {!isScanning && !loading && (
-        <View
-          style={{
-            position: "absolute",
-            bottom: 50,
-            width: "100%",
-            alignItems: "center",
-          }}
-        >
-          <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-            <TouchableOpacity
-              onPress={startScan}
-              style={{
-                backgroundColor: "#007AFF",
-                paddingHorizontal: 30,
-                paddingVertical: 14,
-                borderRadius: 30,
-              }}
-            >
-              <Text style={{ color: "white", fontSize: 16, fontWeight: "bold" }}>
-                เริ่มสแกนใบหน้า
-              </Text>
-            </TouchableOpacity>
-          </Animated.View>
-        </View>
-      )}
-
-      {loading && (
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(255,255,255,0.7)",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <LoadingComp />
-        </View>
-      )}
     </SafeAreaView>
   );
 };
