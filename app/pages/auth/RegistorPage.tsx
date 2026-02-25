@@ -2,8 +2,8 @@ import { registerApi } from "@/api/AuthApi";
 import { FaceCaptureCamera } from "@/components/FaceCaptureCameraProps";
 import Loading from "@/components/LoadingComp";
 import { BG } from "@/constants/styles";
-import i18n from "@/hooks/useI18n";
 import nativeSmartcard from "@/hooks/nativeSmartcard";
+import i18n from "@/hooks/useI18n";
 import { CheckEmailResponse } from "@/types/CheckEmailModel";
 import { RegisterPayloadModel } from "@/types/RegisterPayloadModel";
 import { FontAwesome } from "@expo/vector-icons";
@@ -29,40 +29,40 @@ import {
 
 // ─── Types ─────────────────────────────────────────────────────────
 type BirthdayParts = {
-  year: string;   // "1990" หรือ "0000" = ไม่ทราบ
-  month: string;  // "07"   หรือ "00"   = ไม่ทราบ
-  day: string;    // "09"   หรือ "00"   = ไม่ทราบ
+  year: string; // "1990" หรือ "0000" = ไม่ทราบ
+  month: string; // "07"   หรือ "00"   = ไม่ทราบ
+  day: string; // "09"   หรือ "00"   = ไม่ทราบ
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────
 
 /** แปลง BirthdayParts → Date object (ใช้ 1 เป็น default ถ้าไม่ทราบเดือน/วัน) */
 const birthdayToDate = (b: BirthdayParts): Date => {
-  const y = parseInt(b.year,  10) || new Date().getFullYear() - 60;
+  const y = parseInt(b.year, 10) || new Date().getFullYear() - 60;
   const m = parseInt(b.month, 10) || 1;
-  const d = parseInt(b.day,   10) || 1;
+  const d = parseInt(b.day, 10) || 1;
   return new Date(y, m - 1, d);
 };
 
 /** แปลง Date → BirthdayParts (CE) */
 const dateToBirthday = (date: Date): BirthdayParts => ({
-  year:  date.getFullYear().toString(),
+  year: date.getFullYear().toString(),
   month: (date.getMonth() + 1).toString().padStart(2, "0"),
-  day:   date.getDate().toString().padStart(2, "0"),
+  day: date.getDate().toString().padStart(2, "0"),
 });
 
 /** แปลง BE date string "25460907" → BirthdayParts (CE) รองรับ "00" */
 const parseBuddhistDate = (dateStr: string): BirthdayParts => {
   const empty: BirthdayParts = { year: "0000", month: "00", day: "00" };
   if (!dateStr || dateStr.length !== 8) return empty;
-  const beYear   = parseInt(dateStr.substring(0, 4), 10);
+  const beYear = parseInt(dateStr.substring(0, 4), 10);
   const rawMonth = dateStr.substring(4, 6);
-  const rawDay   = dateStr.substring(6, 8);
-  const ceYear   = beYear > 0 ? beYear - 543 : 0;
+  const rawDay = dateStr.substring(6, 8);
+  const ceYear = beYear > 0 ? beYear - 543 : 0;
   return {
-    year:  ceYear > 0 ? ceYear.toString() : "0000",
+    year: ceYear > 0 ? ceYear.toString() : "0000",
     month: rawMonth,
-    day:   rawDay,
+    day: rawDay,
   };
 };
 
@@ -75,19 +75,28 @@ const formatBirthday = (b: BirthdayParts, unknown: boolean): string => {
 /** แปลง "Mr.#Kasidit##Thong-on" → "Kasidit Thong-on" */
 const parseNameEN = (nameEN: string): string => {
   if (!nameEN) return "";
-  return nameEN.split("#").filter((p) => p.trim() !== "").slice(1).join(" ").trim();
+  return nameEN
+    .split("#")
+    .filter((p) => p.trim() !== "")
+    .slice(1)
+    .join(" ")
+    .trim();
 };
 
 /** แปลง "นาย#กษิดิศ##ทองอ่อน" → "นาย กษิดิศ ทองอ่อน" */
 const parseNameTH = (nameTH: string): string => {
   if (!nameTH) return "";
-  return nameTH.split("#").filter((p) => p.trim() !== "").join(" ").trim();
+  return nameTH
+    .split("#")
+    .filter((p) => p.trim() !== "")
+    .join(" ")
+    .trim();
 };
 
 /** แปลง gender string → number */
 const parseGender = (gender: string): number => {
   const g = (gender || "").toLowerCase();
-  if (g === "male"   || g === "ชาย")  return 1;
+  if (g === "male" || g === "ชาย") return 1;
   if (g === "female" || g === "หญิง") return 2;
   return 0;
 };
@@ -99,34 +108,42 @@ const STEP_FACE = 2;
 // ─── RegisterPage ────────────────────────────────────────────────────
 const RegisterPage = () => {
   const colorScheme = useColorScheme();
-  const router      = useRouter();
-  const { t }       = useTranslation();
+  const router = useRouter();
+  const { t } = useTranslation();
 
   // ── ข้อมูลหลัก ──
-  const [name,    setName]    = useState("");
-  const [iDCard,  setIDCard]  = useState("");
-  const [gender,  setGender]  = useState<number>(0);
+  const [name, setName] = useState("");
+  const [iDCard, setIDCard] = useState("");
+  const [gender, setGender] = useState<number>(0);
 
   // ── วันเกิด ──
-  const [birthday,        setBirthday]        = useState<BirthdayParts>({ year: "0000", month: "00", day: "00" });
+  const [birthday, setBirthday] = useState<BirthdayParts>({
+    year: "0000",
+    month: "00",
+    day: "00",
+  });
   const [unknownBirthday, setUnknownBirthday] = useState(false);
-  const [showDatePicker,  setShowDatePicker]  = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   // ── ข้อมูลเสริม ──
-  const [drugAllergy,       setDrugAllergy]       = useState("");
+  const [drugAllergy, setDrugAllergy] = useState("");
   const [congenitalDisease, setCongenitalDisease] = useState("");
-  const [bloodGroup,        setBloodGroup]         = useState("");
+  const [bloodGroup, setBloodGroup] = useState("");
 
   // ── UI ──
-  const [step,        setStep]        = useState<number>(STEP_FILL);
-  const [isLoading,   setIsLoading]   = useState(false);
+  const [step, setStep] = useState<number>(STEP_FILL);
+  const [isLoading, setIsLoading] = useState(false);
   const [cardLoading, setCardLoading] = useState(false);
 
   // ── derived: Date object สำหรับ DateTimePicker ──
   const dateValue = birthdayToDate(birthday);
   const hasPickedDate = birthday.year !== "0000";
   const displayDate = hasPickedDate
-    ? dateValue.toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" })
+    ? dateValue.toLocaleDateString("th-TH", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
     : "กดเพื่อเลือกวันเกิด";
 
   // ─── อ่านบัตรประชาชน ──────────────────────────────────────────────
@@ -137,8 +154,8 @@ const RegisterPage = () => {
       console.log(result);
 
       if (result?.citizenId) setIDCard(result.citizenId);
-      if (result?.gender)    setGender(parseGender(result.gender));
-      if (result?.nameTH)      setName(parseNameTH(result.nameTH));
+      if (result?.gender) setGender(parseGender(result.gender));
+      if (result?.nameTH) setName(parseNameTH(result.nameTH));
       else if (result?.nameEN) setName(parseNameEN(result.nameEN));
 
       if (result?.birthDate) {
@@ -179,13 +196,13 @@ const RegisterPage = () => {
     try {
       const head: RegisterPayloadModel["head"] = {
         birthday: formatBirthday(birthday, unknownBirthday),
-        sex:      gender.toString(),
-        id_card:  iDCard,
-        name:     name,
-        email:    "",
-        drug_allergy:       drugAllergy        || "",
-        congenital_disease: congenitalDisease  || "",
-        blood_group:        bloodGroup         || "",
+        sex: gender.toString(),
+        id_card: iDCard,
+        name: name,
+        email: "",
+        drug_allergy: drugAllergy || "",
+        congenital_disease: congenitalDisease || "",
+        blood_group: bloodGroup || "",
       };
       const file: RegisterPayloadModel["file"] = { image: uri };
       const response = await registerApi({ head, file });
@@ -214,16 +231,19 @@ const RegisterPage = () => {
   // ─── Hardware back ──────────────────────────────────────────────────
   useEffect(() => {
     const backAction = () => {
-      if (step === STEP_FILL) router.replace("/pages/auth/LoginPage");
+      if (step === STEP_FILL) router.back();
       else setStep(STEP_FILL);
       return true;
     };
-    const backHandler = BackHandler.addEventListener("hardwareBackPress", backAction);
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction,
+    );
     return () => backHandler.remove();
   }, [step]);
 
   const backButton = () => {
-    if (step === STEP_FILL) router.replace("/pages/auth/LoginPage");
+    if (step === STEP_FILL) router.back();
     else setStep(STEP_FILL);
   };
 
@@ -231,7 +251,6 @@ const RegisterPage = () => {
   return (
     <>
       <View className={`${BG.default} flex-1 h-full w-full`}>
-
         {/* ── Header / Progress ── */}
         <View className="flex-row items-center mb-8">
           <Pressable className="px-3 rounded-full" onPress={backButton}>
@@ -314,7 +333,9 @@ const RegisterPage = () => {
                 </Text>
                 {/* Toggle ไม่ทราบวันเกิด */}
                 <View className="flex-row items-center gap-2">
-                  <Text className="text-sm text-gray-500 dark:text-gray-400">ไม่ทราบ</Text>
+                  <Text className="text-sm text-gray-500 dark:text-gray-400">
+                    ไม่ทราบ
+                  </Text>
                   <Switch
                     value={unknownBirthday}
                     onValueChange={(v) => {
@@ -333,7 +354,9 @@ const RegisterPage = () => {
               {unknownBirthday ? (
                 /* แสดง box สีเทาแทนเมื่อไม่ทราบวันเกิด */
                 <View className="h-[56px] mb-[4px] rounded-[24px] border-[1px] border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 justify-center px-4">
-                  <Text className="text-gray-400 dark:text-gray-500">ไม่ทราบวันเกิด (จะส่งเป็น 0000-00-00)</Text>
+                  <Text className="text-gray-400 dark:text-gray-500">
+                    ไม่ทราบวันเกิด (จะส่งเป็น 0000-00-00)
+                  </Text>
                 </View>
               ) : (
                 /* ปุ่มเลือกวัน → เปิด native DateTimePicker */
@@ -350,7 +373,9 @@ const RegisterPage = () => {
                     className="flex-1"
                     style={{
                       color: hasPickedDate
-                        ? (colorScheme === "dark" ? "#fff" : "#111827")
+                        ? colorScheme === "dark"
+                          ? "#fff"
+                          : "#111827"
                         : "#9CA3AF",
                     }}
                   >
@@ -384,7 +409,9 @@ const RegisterPage = () => {
                       onPress={() => setShowDatePicker(false)}
                       className="items-end px-2 py-1"
                     >
-                      <Text className="text-[#2196F3] font-bold text-base">เสร็จสิ้น</Text>
+                      <Text className="text-[#2196F3] font-bold text-base">
+                        เสร็จสิ้น
+                      </Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -397,11 +424,17 @@ const RegisterPage = () => {
                 {t("register_gender_label")}
               </Text>
               <View className="h-[56px] mb-[16px] rounded-[24px] border-[1px] border-gray-900 dark:border-gray-200 justify-center overflow-hidden">
-                <Picker selectedValue={gender} onValueChange={(v) => setGender(v)}>
+                <Picker
+                  selectedValue={gender}
+                  onValueChange={(v) => setGender(v)}
+                >
                   {gender === 0 && (
-                    <Picker.Item label={t("register_gender_select")} value={0} />
+                    <Picker.Item
+                      label={t("register_gender_select")}
+                      value={0}
+                    />
                   )}
-                  <Picker.Item label={t("register_gender_male")}   value={1} />
+                  <Picker.Item label={t("register_gender_male")} value={1} />
                   <Picker.Item label={t("register_gender_female")} value={2} />
                 </Picker>
               </View>
@@ -409,22 +442,35 @@ const RegisterPage = () => {
               {/* ── หมู่เลือด (optional) ── */}
               <Text className="text-lg font-bold text-black mb-[8px] dark:text-white">
                 {t("register_blood_group_label")}{" "}
-                <Text className="text-sm font-normal text-gray-500">{t("register_optional")}</Text>
+                <Text className="text-sm font-normal text-gray-500">
+                  {t("register_optional")}
+                </Text>
               </Text>
               <View className="h-[56px] mb-[16px] rounded-[24px] border-[1px] border-gray-900 dark:border-gray-200 justify-center overflow-hidden">
-                <Picker selectedValue={bloodGroup} onValueChange={(v) => setBloodGroup(v)}>
-                  <Picker.Item label={t("register_blood_group_unknown")} value=""   />
-                  <Picker.Item label={t("register_blood_group_a")}       value="A"  />
-                  <Picker.Item label={t("register_blood_group_b")}       value="B"  />
-                  <Picker.Item label={t("register_blood_group_ab")}      value="AB" />
-                  <Picker.Item label={t("register_blood_group_o")}       value="O"  />
+                <Picker
+                  selectedValue={bloodGroup}
+                  onValueChange={(v) => setBloodGroup(v)}
+                >
+                  <Picker.Item
+                    label={t("register_blood_group_unknown")}
+                    value=""
+                  />
+                  <Picker.Item label={t("register_blood_group_a")} value="A" />
+                  <Picker.Item label={t("register_blood_group_b")} value="B" />
+                  <Picker.Item
+                    label={t("register_blood_group_ab")}
+                    value="AB"
+                  />
+                  <Picker.Item label={t("register_blood_group_o")} value="O" />
                 </Picker>
               </View>
 
               {/* ── แพ้ยา (optional) ── */}
               <Text className="text-lg font-bold text-black mb-[8px] dark:text-white">
                 {t("register_drug_allergy_label")}{" "}
-                <Text className="text-sm font-normal text-gray-500">{t("register_optional")}</Text>
+                <Text className="text-sm font-normal text-gray-500">
+                  {t("register_optional")}
+                </Text>
               </Text>
               <TextInput
                 className="h-[56px] mb-[16px] rounded-[24px] border-[1px] border-gray-900 dark:border-gray-200 dark:text-white placeholder:text-gray-400 p-4"
@@ -436,7 +482,9 @@ const RegisterPage = () => {
               {/* ── โรคประจำตัว (optional) ── */}
               <Text className="text-lg font-bold text-black mb-[8px] dark:text-white">
                 {t("register_congenital_disease_label")}{" "}
-                <Text className="text-sm font-normal text-gray-500">{t("register_optional")}</Text>
+                <Text className="text-sm font-normal text-gray-500">
+                  {t("register_optional")}
+                </Text>
               </Text>
               <TextInput
                 className="h-[56px] mb-[16px] rounded-[24px] border-[1px] border-gray-900 dark:border-gray-200 dark:text-white placeholder:text-gray-400 p-4"
@@ -454,7 +502,9 @@ const RegisterPage = () => {
             onPress={handleNextStep}
             className="h-[56px] w-full rounded-[24px] mb-10 bg-blue-500 dark:bg-[#2196F3] items-center justify-center"
           >
-            <Text className="text-center text-white font-bold">{t("continue")}</Text>
+            <Text className="text-center text-white font-bold">
+              {t("continue")}
+            </Text>
           </Pressable>
         )}
       </View>
@@ -462,7 +512,9 @@ const RegisterPage = () => {
       {/* ══════════════════════════════════════════════
           STEP 2 — สแกนหน้า
       ══════════════════════════════════════════════ */}
-      <View className={`absolute w-full h-full ${step === STEP_FACE ? "" : "hidden"}`}>
+      <View
+        className={`absolute w-full h-full ${step === STEP_FACE ? "" : "hidden"}`}
+      >
         <FaceCaptureCamera
           IsActive={step === STEP_FACE}
           onCapture={async (uri: string) => {
