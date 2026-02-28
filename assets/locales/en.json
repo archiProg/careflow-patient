@@ -189,5 +189,57 @@
   "don_t_have_an_account": "Don't have an account?",
   "sign_up": "Sign Up",
   "login_with_id_card": "Login with ID Card",
-  "home-screen-incomplete-consultation": "Incomplete Consultation"
+  "home-screen-incomplete-consultation": "Incomplete Consultation",
+  "face_scan": {
+    "title": "Face Scan",
+    "subtitle": "Please prepare before starting the scan\nfor the best results",
+    "tips_label": "Tips",
+    "start_button": "Start Face Scan",
+    "instruction_hint": "Follow the instructions carefully",
+    "select_your_best_photo": "Select your best photo",
+    "confirm": "Confirm",
+    "tips": {
+      "lighting": "Make sure you are in a well-lit area",
+      "no_glasses": "Remove glasses before scanning",
+      "neutral_face": "Keep a neutral expression, no smiling or frowning",
+      "hold_upright": "Hold your phone upright at eye level",
+      "follow_steps": "Follow the on-screen instructions step by step"
+    },
+    "step": {
+      "prepare": "Get Ready",
+      "blink": "Blink",
+      "look_up": "Look Up",
+      "look_down": "Look Down",
+      "right": "Turn Right",
+      "left": "Turn Left",
+      "center": "Look Straight",
+      "done": "Done"
+    },
+    "distance": {
+      "good": "Good distance",
+      "center_face": "Center your face",
+      "move_closer": "Move closer",
+      "move_back": "Move back",
+      "hold_still": "Perfect! Hold still..."
+    },
+    "error": {
+      "no_permission": "Camera permission is required",
+      "no_camera": "No camera device found"
+    }
+  },
+  "face": {
+    "pressToScan": "Press start to scan your face",
+    "blinkToVerify": "Blink to verify your identity",
+    "timeout": "Timeout, please try again",
+    "takingPhoto": "Taking photo...",
+    "verifying": "Verifying...",
+    "faceDetectedBlink": "Face detected, please blink",
+    "loginSuccess": "Login successful",
+    "loginFailed": "Login failed",
+    "invalidToken": "Invalid token",
+    "tryAgain": "Please try again",
+    "serverError": "Server error",
+    "cameraUnavailable": "Camera unavailable",
+    "startScan": "Start Face Scan"
+  }
 }

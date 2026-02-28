@@ -17,6 +17,7 @@ import { Dispatch } from "@reduxjs/toolkit";
 import { useRouter } from "expo-router";
 import { File } from "expo-file-system";
 import LoadingComp from "./LoadingComp";
+import { useTranslation } from "react-i18next";
 
 import {
   useCameraDevice,
@@ -33,6 +34,7 @@ import Svg, { Mask, Rect } from "react-native-svg";
 const LoginFaceComp = () => {
   const dispatch: Dispatch = useDispatch();
   const router = useRouter();
+  const { t } = useTranslation();
 
   const { hasPermission } = useCameraPermission();
   const device = useCameraDevice("front");
@@ -41,12 +43,12 @@ const LoginFaceComp = () => {
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 
   const ovalSize = containerSize.width * 0.8;
-  const ovalTop = (containerSize.height - ovalSize) / 2;
+  const ovalTop = (containerSize.height - ovalSize) / 3;
   const ovalLeft = (containerSize.width - ovalSize) / 2;
 
   const [blinked, setBlinked] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState("กดเริ่มเพื่อสแกนใบหน้า");
+  const [status, setStatus] = useState(t("face.pressToScan"));
   const [isScanning, setIsScanning] = useState(false);
   const [faceDetected, setFaceDetected] = useState(false);
 
@@ -94,13 +96,13 @@ const LoginFaceComp = () => {
   /* ================= Start Scan ================= */
   const startScan = () => {
     setIsScanning(true);
-    setStatus("กระพริบตาเพื่อยืนยันตัวตน");
+    setStatus(t("face.blinkToVerify"));
     setBlinked(false);
     setFaceDetected(false);
 
     timeoutRef.current = setTimeout(() => {
       setIsScanning(false);
-      setStatus("หมดเวลา กรุณาลองใหม่");
+      setStatus(t("face.timeout"));
     }, 10000);
   };
 
@@ -113,7 +115,7 @@ const LoginFaceComp = () => {
     setIsScanning(false);
 
     try {
-      setStatus("กำลังถ่ายภาพ...");
+      setStatus(t("face.takingPhoto"));
 
       const photo = await cameraRef.current.takePhoto({ flash: "off" });
 
@@ -124,7 +126,7 @@ const LoginFaceComp = () => {
 
       if (!base64) throw new Error("Base64 failed");
 
-      setStatus("กำลังตรวจสอบ...");
+      setStatus(t("face.verifying"));
       setLoading(true);
 
       await handleAuth(base64);
@@ -148,7 +150,7 @@ const LoginFaceComp = () => {
 
     const face = faces[0];
     setFaceDetected(true);
-    setStatus("ตรวจพบใบหน้าแล้ว กรุณากระพริบตา");
+    setStatus(t("face.faceDetectedBlink"));
 
     const EYE_OPEN = 0.7;
     const EYE_CLOSE = 0.3;
@@ -180,16 +182,16 @@ const LoginFaceComp = () => {
         if (getResponse.token) {
           dispatch(setToken(getResponse.token));
           Provider.setToken(getResponse.token);
-          setStatus("เข้าสู่ระบบสำเร็จ");
+          setStatus(t("face.loginSuccess"));
           router.back();
         } else {
-          Alert.alert("Login failed", "Invalid token");
+          Alert.alert(t("face.loginFailed"), t("face.invalidToken"));
         }
       } else {
-        Alert.alert("Login failed", "Please try again");
+        Alert.alert(t("face.loginFailed"), t("face.tryAgain"));
       }
     } catch (error) {
-      Alert.alert("Login failed", "Server error");
+      Alert.alert(t("face.loginFailed"), t("face.serverError"));
     } finally {
       setLoading(false);
       setIsScanning(false);
@@ -199,7 +201,7 @@ const LoginFaceComp = () => {
 
   if (!hasPermission || !device) {
     return (
-      <Text className="mt-12 text-center">Camera unavailable</Text>
+      <Text className="mt-12 text-center">{t("face.cameraUnavailable")}</Text>
     );
   }
 
@@ -224,7 +226,7 @@ const LoginFaceComp = () => {
               faceDetectionOptions={faceDetectionOptions}
             />
 
-            {/* ===== Overlay (pointerEvents="none" ไม่บัง Button ด้านล่าง) ===== */}
+            {/* ===== Overlay ===== */}
             <View style={StyleSheet.absoluteFill} pointerEvents="none">
               <Svg width={containerSize.width} height={containerSize.height}>
                 <Mask id="mask">
@@ -247,7 +249,6 @@ const LoginFaceComp = () => {
                 />
               </Svg>
 
-              {/* วงรีเปลี่ยนสี — ต้องใช้ inline เพราะค่า dynamic จาก onLayout */}
               <View
                 style={{
                   position: "absolute",
@@ -276,7 +277,7 @@ const LoginFaceComp = () => {
                     className="bg-blue-500 px-8 py-4 rounded-[30px]"
                   >
                     <Text className="text-white text-base font-bold">
-                      เริ่มสแกนใบหน้า
+                      {t("face.startScan")}
                     </Text>
                   </TouchableOpacity>
                 </Animated.View>
