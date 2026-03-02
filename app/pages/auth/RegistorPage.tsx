@@ -26,7 +26,7 @@ import {
   TextInput,
   TouchableOpacity,
   useColorScheme,
-  View
+  View,
 } from "react-native";
 const isReadingRef = useRef(false);
 
@@ -108,12 +108,10 @@ const parseGender = (gender: string): number => {
 const STEP_FILL = 1;
 const STEP_FACE = 2;
 
-
 const { SmartcardModule } = NativeModules;
 const smartcardEmitter = useRef(
-  new NativeEventEmitter(NativeModules.SmartcardModule)
+  new NativeEventEmitter(NativeModules.SmartcardModule),
 ).current;
-
 
 // ─── RegisterPage ────────────────────────────────────────────────────
 const RegisterPage = () => {
@@ -150,10 +148,10 @@ const RegisterPage = () => {
   const hasPickedDate = birthday.year !== "0000";
   const displayDate = hasPickedDate
     ? dateValue.toLocaleDateString("th-TH", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
     : "กดเพื่อเลือกวันเกิด";
 
   // ─── อ่านบัตรประชาชน ──────────────────────────────────────────────
@@ -186,6 +184,25 @@ const RegisterPage = () => {
     }
   };
 
+  const handleInputCard = () => {
+    console.log(55555555555555555555555555555555555555555555555555555555);
+
+    isReadingRef.current = false;
+    readSmartcard();
+  };
+
+  useEffect(() => {
+    const cardInsertListener = smartcardEmitter.addListener(
+      "CARD_INSERTED",
+      () => {
+        readSmartcard();
+      },
+    );
+
+    return () => {
+      cardInsertListener.remove();
+    };
+  }, []);
 
   // ─── Validate & Next ───────────────────────────────────────────────
   const handleNextStep = () => {
@@ -306,8 +323,8 @@ const RegisterPage = () => {
               keyboardShouldPersistTaps="handled"
             >
               {/* ── ปุ่มอ่านบัตร ── */}
-              <TouchableOpacity
-                onPress={readSmartcard}
+              {/* <TouchableOpacity
+                onPress={handleInputCard}
                 disabled={cardLoading}
                 className="h-[56px] mb-[24px] rounded-[24px] bg-[#2196F3] items-center justify-center flex-row gap-3"
               >
@@ -315,7 +332,7 @@ const RegisterPage = () => {
                 <Text className="text-white font-bold text-base">
                   {cardLoading ? "กำลังอ่านบัตร..." : "อ่านบัตรประชาชน"}
                 </Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
 
               {/* ── ชื่อ ── */}
               <Text className="text-lg font-bold text-black mb-[8px] dark:text-white">

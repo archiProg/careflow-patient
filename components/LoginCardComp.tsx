@@ -13,13 +13,13 @@ import {
   Pressable,
   Text,
   TextInput,
-  View
+  View,
 } from "react-native";
 import { useDispatch } from "react-redux";
 
 const { SmartcardModule } = NativeModules;
 const smartcardEmitter = useRef(
-  new NativeEventEmitter(NativeModules.SmartcardModule)
+  new NativeEventEmitter(NativeModules.SmartcardModule),
 ).current;
 
 const LoginCardComp = () => {
@@ -82,7 +82,7 @@ const LoginCardComp = () => {
 
   // 🔥 READ CARD
   const readSmartcard = async () => {
-    if (isReadingRef.current) return;   // 🔒 กันรัว
+    if (isReadingRef.current) return; // 🔒 กันรัว
     try {
       isReadingRef.current = true;
       setStatus("กำลังอ่านบัตร...");
@@ -91,6 +91,8 @@ const LoginCardComp = () => {
         setIDCard(result.citizenId);
         handleLogin(result.citizenId);
       }
+    } catch {
+      isReadingRef.current = false;
     } finally {
       isReadingRef.current = false;
     }
@@ -98,6 +100,8 @@ const LoginCardComp = () => {
 
   useEffect(() => {
     // reset flags
+    console.log(55555555555555555555555555555555555555555555555555555555);
+
     isLoggingInRef.current = false;
     lastIdRef.current = null;
     waitingForRemoveRef.current = false;
@@ -105,30 +109,39 @@ const LoginCardComp = () => {
 
     try {
       SmartcardModule.startCardMonitor?.(1000);
-    } catch { }
+    } catch {}
 
     const usbListener = smartcardEmitter.addListener("USB_CONNECTED", () => {
       setStatus("พบเครื่องอ่านบัตร");
     });
 
-    const usbDiscListener = smartcardEmitter.addListener("USB_DISCONNECTED", () => {
-      setStatus("ไม่พบเครื่องอ่านบัตร");
-      waitingForRemoveRef.current = false;
-      lastIdRef.current = null;
-      setIDCard("");
-    });
+    const usbDiscListener = smartcardEmitter.addListener(
+      "USB_DISCONNECTED",
+      () => {
+        setStatus("ไม่พบเครื่องอ่านบัตร");
+        waitingForRemoveRef.current = false;
+        lastIdRef.current = null;
+        setIDCard("");
+      },
+    );
 
-    const cardInsertListener = smartcardEmitter.addListener("CARD_INSERTED", () => {
-      setStatus("ตรวจพบบัตร กำลังอ่าน...");
-      readSmartcard();
-    });
+    const cardInsertListener = smartcardEmitter.addListener(
+      "CARD_INSERTED",
+      () => {
+        setStatus("ตรวจพบบัตร กำลังอ่าน...");
+        readSmartcard();
+      },
+    );
 
-    const cardRemoveListener = smartcardEmitter.addListener("CARD_REMOVED", () => {
-      setStatus("กรุณาเสียบบัตรประชาชน");
-      waitingForRemoveRef.current = false;
-      lastIdRef.current = null;
-      setIDCard("");
-    });
+    const cardRemoveListener = smartcardEmitter.addListener(
+      "CARD_REMOVED",
+      () => {
+        setStatus("กรุณาเสียบบัตรประชาชน");
+        waitingForRemoveRef.current = false;
+        lastIdRef.current = null;
+        setIDCard("");
+      },
+    );
 
     return () => {
       usbListener.remove();
@@ -151,13 +164,12 @@ const LoginCardComp = () => {
           onChangeText={setIDCard}
         />
         <Pressable
-          onPress={() => readSmartcard()}
+          onPress={() => {
+            setIDCard("");
+          }}
           className="h-[56px] items-center justify-center rounded-full"
         >
-          <FontAwesome
-            name="refresh"
-            size={20} color="#6B7280"
-          />
+          <FontAwesome name="refresh" size={20} color="#6B7280" />
         </Pressable>
       </View>
 
@@ -167,8 +179,6 @@ const LoginCardComp = () => {
       >
         <Text className="text-white">Login</Text>
       </Pressable>
-
-
     </View>
   );
 };
