@@ -18,7 +18,9 @@ import {
 import { useDispatch } from "react-redux";
 
 const { SmartcardModule } = NativeModules;
-const smartcardEmitter = new NativeEventEmitter(SmartcardModule);
+const smartcardEmitter = useRef(
+  new NativeEventEmitter(NativeModules.SmartcardModule)
+).current;
 
 const LoginCardComp = () => {
   const router = useRouter();
@@ -26,11 +28,10 @@ const LoginCardComp = () => {
 
   const [idCard, setIDCard] = useState("");
   const [status, setStatus] = useState("กรุณาเสียบบัตรประชาชน");
-
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isLoggingInRef = useRef(false);
   const lastIdRef = useRef<string | null>(null);
   const waitingForRemoveRef = useRef(false);
+  const isReadingRef = useRef(false);
 
   // 🔥 LOGIN FUNCTION
   const handleLogin = async (cardId: string) => {
@@ -41,7 +42,7 @@ const LoginCardComp = () => {
 
     try {
       isLoggingInRef.current = true;
-      lastIdRef.current = cardId;      
+      lastIdRef.current = cardId;
 
       setStatus("กำลังเข้าสู่ระบบ...");
 
@@ -59,7 +60,7 @@ const LoginCardComp = () => {
           dispatch(setToken(getResponse.token));
           Provider.setToken(getResponse.token);
 
-          stopPolling();
+          // (no polling)
           router.back();
           return;
         }
@@ -69,11 +70,11 @@ const LoginCardComp = () => {
       setStatus("เข้าสู่ระบบไม่สำเร็จ กรุณาถอดบัตรแล้วเสียบใหม่");
 
       waitingForRemoveRef.current = true;
-      stopPolling();
+      // (no polling)
     } catch {
       setStatus("เกิดข้อผิดพลาด กรุณาถอดบัตรแล้วเสียบใหม่");
       waitingForRemoveRef.current = true;
-      stopPolling();
+      // (no polling)
     } finally {
       isLoggingInRef.current = false;
     }
@@ -81,50 +82,59 @@ const LoginCardComp = () => {
 
   // 🔥 READ CARD
   const readSmartcard = async () => {
+    if (isReadingRef.current) return;   // 🔒 กันรัว
     try {
+      isReadingRef.current = true;
       setStatus("กำลังอ่านบัตร...");
       const result = await nativeSmartcard.readSmartcardData();
-
       if (result?.citizenId) {
         setIDCard(result.citizenId);
         handleLogin(result.citizenId);
       }
-    } catch {
-      setStatus("กรุณาเสียบบัตรประชาชน");
+    } finally {
+      isReadingRef.current = false;
     }
   };
 
-  // 🔥 START POLLING
-  const startPolling = () => {
-    if (intervalRef.current) return;
-
-    intervalRef.current = setInterval(() => {
-      readSmartcard();
-    }, 2000);
-  };
-
-  const stopPolling = () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  };
-
-  // 🔥 EVENT LISTENER
   useEffect(() => {
+    // reset flags
+    isLoggingInRef.current = false;
+    lastIdRef.current = null;
+    waitingForRemoveRef.current = false;
+    isReadingRef.current = false;
+
+    try {
+      SmartcardModule.startCardMonitor?.(1000);
+    } catch { }
+
     const usbListener = smartcardEmitter.addListener("USB_CONNECTED", () => {
       setStatus("พบเครื่องอ่านบัตร");
-      startPolling();
     });
 
-    const cardListener = smartcardEmitter.addListener("CARD_DETECTED", () => {
+    const usbDiscListener = smartcardEmitter.addListener("USB_DISCONNECTED", () => {
+      setStatus("ไม่พบเครื่องอ่านบัตร");
+      waitingForRemoveRef.current = false;
+      lastIdRef.current = null;
+      setIDCard("");
+    });
+
+    const cardInsertListener = smartcardEmitter.addListener("CARD_INSERTED", () => {
+      setStatus("ตรวจพบบัตร กำลังอ่าน...");
       readSmartcard();
+    });
+
+    const cardRemoveListener = smartcardEmitter.addListener("CARD_REMOVED", () => {
+      setStatus("กรุณาเสียบบัตรประชาชน");
+      waitingForRemoveRef.current = false;
+      lastIdRef.current = null;
+      setIDCard("");
     });
 
     return () => {
       usbListener.remove();
-      cardListener.remove();
-      stopPolling();
+      usbDiscListener.remove();
+      cardInsertListener.remove();
+      cardRemoveListener.remove();
     };
   }, []);
 

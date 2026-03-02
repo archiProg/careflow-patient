@@ -22,6 +22,180 @@ class SmartcardModule(private val reactContext: ReactApplicationContext) :
     private var seq: Byte = 0
     private var receiverRegistered = false
 
+
+    // ============================
+    // 🔥 CARD/USB MONITOR (EVENT-DRIVEN FOR JS)
+    // ============================
+    private val EVENT_USB_CONNECTED = "USB_CONNECTED"
+    private val EVENT_USB_DISCONNECTED = "USB_DISCONNECTED"
+    private val EVENT_CARD_INSERTED = "CARD_INSERTED"
+    private val EVENT_CARD_REMOVED = "CARD_REMOVED"
+
+    @Volatile private var monitorRunning: Boolean = false
+    private var monitorThread: Thread? = null
+    private var lastUsbConnected: Boolean? = null
+    private var lastCardPresent: Boolean? = null
+
+    @ReactMethod
+    fun startCardMonitor(intervalMs: Int = 1000) {
+        if (monitorRunning) return
+        monitorRunning = true
+
+        monitorThread = Thread {
+            while (monitorRunning) {
+                try {
+                    val usbManager = reactContext.getSystemService(Context.USB_SERVICE) as UsbManager
+                    val device = findDevice(usbManager)
+                    val usbConnected = device != null
+
+                    // USB attach/detach (fallback in case broadcast is missed)
+                    if (lastUsbConnected == null || lastUsbConnected != usbConnected) {
+                        lastUsbConnected = usbConnected
+                        if (usbConnected) {
+                            sendEvent(EVENT_USB_CONNECTED, null)
+                        } else {
+                            lastCardPresent = null
+                            sendEvent(EVENT_USB_DISCONNECTED, null)
+                        }
+                    }
+
+                    // Card inserted/removed (best-effort; smartcard readers typically don't broadcast this)
+                    if (usbConnected && device != null) {
+                        val cardPresent = tryCheckCardPresent(usbManager, device)
+                        if (lastCardPresent == null || lastCardPresent != cardPresent) {
+                            lastCardPresent = cardPresent
+                            if (cardPresent) {
+                                sendEvent(EVENT_CARD_INSERTED, null)
+                            } else {
+                                sendEvent(EVENT_CARD_REMOVED, null)
+                            }
+                        }
+                    }
+
+                } catch (_: Exception) {
+                    // swallow; next loop
+                }
+
+                try { Thread.sleep(intervalMs.toLong().coerceAtLeast(250)) } catch (_: Exception) {}
+            }
+        }.apply {
+            name = "SmartcardMonitor"
+            isDaemon = true
+            start()
+        }
+    }
+
+    @ReactMethod
+    fun stopCardMonitor() {
+        monitorRunning = false
+        try { monitorThread?.interrupt() } catch (_: Exception) {}
+        monitorThread = null
+        lastUsbConnected = null
+        lastCardPresent = null
+    }
+
+    private fun tryCheckCardPresent(usbManager: UsbManager, device: UsbDevice): Boolean {
+        // If no permission yet, request permission (card presence = false for now)
+        if (!usbManager.hasPermission(device)) {
+            val permissionIntent = PendingIntent.getBroadcast(
+                reactContext,
+                0,
+                Intent(ACTION_USB_PERMISSION),
+                PendingIntent.FLAG_IMMUTABLE
+            )
+            usbManager.requestPermission(device, permissionIntent)
+            return false
+        }
+
+        val connection = usbManager.openDevice(device) ?: return false
+
+        try {
+            val intf = device.getInterface(0)
+            connection.claimInterface(intf, true)
+
+            var epIn: UsbEndpoint? = null
+            var epOut: UsbEndpoint? = null
+            for (i in 0 until intf.endpointCount) {
+                val ep = intf.getEndpoint(i)
+                if (ep.type == UsbConstants.USB_ENDPOINT_XFER_BULK) {
+                    if (ep.direction == UsbConstants.USB_DIR_IN) epIn = ep else epOut = ep
+                }
+            }
+            if (epIn == null || epOut == null) return false
+
+            // POWER ON (best-effort)
+            val powerOn = ByteArray(10)
+            powerOn[0] = 0x62.toByte()
+            powerOn[6] = seq++
+            connection.bulkTransfer(epOut, powerOn, powerOn.size, 1500)
+            connection.bulkTransfer(epIn, ByteArray(512), 512, 1500)
+
+            fun sendApdu(cmd: ByteArray): ByteArray? {
+                val header = ByteArray(10)
+                header[0] = 0x6F.toByte()
+                val len = cmd.size
+                header[1] = (len and 0xFF).toByte()
+                header[2] = ((len shr 8) and 0xFF).toByte()
+                header[6] = seq++
+
+                val packet = header + cmd
+                if (connection.bulkTransfer(epOut, packet, packet.size, 1500) <= 0) return null
+
+                val buffer = ByteArray(2048)
+                val recv = connection.bulkTransfer(epIn, buffer, buffer.size, 1500)
+                if (recv < 10) return null
+
+                val dataLen =
+                    (buffer[1].toInt() and 0xFF) or
+                            ((buffer[2].toInt() and 0xFF) shl 8)
+
+                if (dataLen <= 1 || 10 + dataLen > buffer.size) return null
+                val resp = java.util.Arrays.copyOfRange(buffer, 10, 10 + dataLen)
+
+                if (resp.size < 2) return null
+                val sw1 = resp[resp.size - 2]
+                val sw2 = resp[resp.size - 1]
+
+                // 0x9000 = OK
+                if (sw1 == 0x90.toByte() && sw2 == 0x00.toByte()) return resp
+
+                // 0x61xx = GET RESPONSE
+                if (sw1 == 0x61.toByte()) {
+                    return sendApdu(byteArrayOf(0x00, 0xC0.toByte(), 0x00, 0x00, sw2))
+                }
+
+                return null
+            }
+
+            // SELECT Thai ID card app AID: A0 00 00 00 54 48 00 01
+            val selectResp = sendApdu(
+                byteArrayOf(
+                    0x00,
+                    0xA4.toByte(),
+                    0x04,
+                    0x00,
+                    0x08,
+                    0xA0.toByte(),
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x54,
+                    0x48,
+                    0x00,
+                    0x01
+                )
+            )
+
+            // If SELECT succeeds, assume card is present
+            return selectResp != null
+
+        } catch (_: Exception) {
+            return false
+        } finally {
+            try { connection.close() } catch (_: Exception) {}
+        }
+    }
+
     // ============================
     // 🔥 EVENT SENDER
     // ============================
@@ -66,6 +240,7 @@ class SmartcardModule(private val reactContext: ReactApplicationContext) :
     }
 
     override fun onCatalystInstanceDestroy() {
+        stopCardMonitor()
         if (receiverRegistered) {
             try { reactContext.unregisterReceiver(usbReceiver) } catch (_: Exception) {}
             receiverRegistered = false
@@ -100,7 +275,16 @@ class SmartcardModule(private val reactContext: ReactApplicationContext) :
                 }
 
                 ACTION_USB_PERMISSION -> {
-                    // ไม่ต้องทำอะไรเพิ่ม
+                    val device: UsbDevice? =
+                        intent.getParcelableExtra(UsbManager.EXTRA_DEVICE)
+
+                    // If permission granted (or device already permitted), notify JS
+                    if (device != null && isSupported(device)) {
+                        val usbManager = reactContext.getSystemService(Context.USB_SERVICE) as UsbManager
+                        if (usbManager.hasPermission(device)) {
+                            sendEvent(EVENT_USB_CONNECTED, null)
+                        }
+                    }
                 }
             }
         }
@@ -128,9 +312,6 @@ class SmartcardModule(private val reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun readSmartcardData(promise: Promise) {
-
-        // 🔥 แจ้งว่าเริ่มอ่านบัตร
-        sendEvent("CARD_DETECTED", null)
 
         val usbManager = reactContext.getSystemService(Context.USB_SERVICE) as UsbManager
         val device = findDevice(usbManager)

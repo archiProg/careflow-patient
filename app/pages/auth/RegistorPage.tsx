@@ -10,12 +10,14 @@ import { FontAwesome } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Alert,
   BackHandler,
   KeyboardAvoidingView,
+  NativeEventEmitter,
+  NativeModules,
   Platform,
   Pressable,
   ScrollView,
@@ -24,8 +26,9 @@ import {
   TextInput,
   TouchableOpacity,
   useColorScheme,
-  View,
+  View
 } from "react-native";
+const isReadingRef = useRef(false);
 
 // ─── Types ─────────────────────────────────────────────────────────
 type BirthdayParts = {
@@ -105,6 +108,13 @@ const parseGender = (gender: string): number => {
 const STEP_FILL = 1;
 const STEP_FACE = 2;
 
+
+const { SmartcardModule } = NativeModules;
+const smartcardEmitter = useRef(
+  new NativeEventEmitter(NativeModules.SmartcardModule)
+).current;
+
+
 // ─── RegisterPage ────────────────────────────────────────────────────
 const RegisterPage = () => {
   const colorScheme = useColorScheme();
@@ -140,18 +150,21 @@ const RegisterPage = () => {
   const hasPickedDate = birthday.year !== "0000";
   const displayDate = hasPickedDate
     ? dateValue.toLocaleDateString("th-TH", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
     : "กดเพื่อเลือกวันเกิด";
 
   // ─── อ่านบัตรประชาชน ──────────────────────────────────────────────
   const readSmartcard = async () => {
+    if (isReadingRef.current) return;
+
     setCardLoading(true);
+    isReadingRef.current = true;
+
     try {
       const result = await nativeSmartcard.readSmartcardData();
-      console.log(result);
 
       if (result?.citizenId) setIDCard(result.citizenId);
       if (result?.gender) setGender(parseGender(result.gender));
@@ -161,17 +174,18 @@ const RegisterPage = () => {
       if (result?.birthDate) {
         const parsed = parseBuddhistDate(result.birthDate);
         setBirthday(parsed);
-        // ถ้าบัตรไม่มีปีเกิดเลย → เปิด toggle "ไม่ทราบ" อัตโนมัติ
         setUnknownBirthday(parsed.year === "0000");
       }
 
       Alert.alert(t("notification"), "อ่านข้อมูลบัตรสำเร็จ");
-    } catch {
+    } catch (e) {
       Alert.alert(t("notification"), "กรุณาเสียบบัตรประชาชน");
     } finally {
+      isReadingRef.current = false;
       setCardLoading(false);
     }
   };
+
 
   // ─── Validate & Next ───────────────────────────────────────────────
   const handleNextStep = () => {
