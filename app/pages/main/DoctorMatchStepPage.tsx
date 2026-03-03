@@ -106,21 +106,25 @@ const DoctorMatchStepPage = () => {
 
             // case ended
             "case:ended": ({ caseId, endedBy }: { caseId: string; endedBy: string }) => {
-                Alert.alert("คุณถูกสิ้นสุดการสัมภาษณ์", "คุณถูกสิ้นสุดการสัมภาษณ์", [
-                    {
-                        text: "ตกลง",
-                        onPress: () => {
-                            router.replace({
-                                pathname: "/pages/main/ConsultSuccessPage",
-                                params: {
-                                    consult_id: caseId,
-                                    userName: "",
-                                },
-                            });
+    Alert.alert(
+        t("consult_ended_title"),
+        t("consult_ended_message"),
+        [
+            {
+                text: t("ok"),
+                onPress: () => {
+                    router.replace({
+                        pathname: "/pages/main/ConsultSuccessPage",
+                        params: {
+                            consult_id: caseId,
+                            userName: "",
                         },
-                    },
-                ]);
+                    });
+                },
             },
+        ]
+    );
+},
         });
 
         return cleanup;

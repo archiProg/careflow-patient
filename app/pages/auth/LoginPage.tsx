@@ -1,5 +1,6 @@
 import LoginCardComp from "@/components/LoginCardComp";
 import LoginFaceComp from "@/components/LoginFaceComp";
+import { Colors } from "@/constants/theme";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -15,140 +16,260 @@ import {
 const LoginPage = () => {
   const router = useRouter();
   const { t } = useTranslation();
-  const colorScheme = useColorScheme();
+  const colorScheme = useColorScheme() ?? "light";
+  const theme = Colors[colorScheme];
+
   const [statePage, setStatePage] = useState("main");
 
-  const handleIdCardPage = () => {
-    setStatePage("idCard");
-  };
-
-  const handleFaceRecognitionPage = () => {
-    setStatePage("faceRecognition");
-  };
-
-  const handleSignUpPage = () => {
-    router.push("/pages/auth/RegistorPage");
-  };
-
-  const handleBack = () => {
-    setStatePage("main");
-  };
-
-
-  const handleLanguageSelector = () => {
+  const handleIdCardPage = () => setStatePage("idCard");
+  const handleFaceRecognitionPage = () => setStatePage("faceRecognition");
+  const handleSignUpPage = () => router.push("/pages/auth/RegistorPage");
+  const handleBack = () => setStatePage("main");
+  const handleLanguageSelector = () =>
     router.push("/pages/settings/LanguagePage");
-  };
 
   useEffect(() => {
     const backAction = () => {
-      if (statePage == "main") {
-        return false;
-      } else {
-        setStatePage("main");
-        return true;
-      }
+      if (statePage === "main") return false;
+      setStatePage("main");
+      return true;
     };
 
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
-      backAction,
+      backAction
     );
 
     return () => backHandler.remove();
   }, [statePage]);
 
   return (
-    <View className="flex-1">
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
       {statePage === "main" && (
-        <View className="flex-1 w-full items-center justify-center">
-          <View className="flex flex-row items-center justify-end w-full px-4">
+        <View style={{ flex: 1, justifyContent: "center" }}>
+          {/* Language Button */}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "flex-end",
+              paddingHorizontal: 16,
+              paddingTop: 16,
+            }}
+          >
             <Pressable
-              className="flex-row items-center justify-center bg-white px-3 py-2 rounded-full shadow"
-              onPress={() => handleLanguageSelector()}
+              onPress={handleLanguageSelector}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: theme.card,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                borderRadius: 999,
+                borderWidth: 1,
+                borderColor: theme.border,
+              }}
             >
               <FontAwesome
                 name="globe"
-                size={24}
-                className=" text-black dark:text-white"
+                size={22}
+                color={theme.icon}
               />
             </Pressable>
           </View>
-          <View className="flex-1 h-1/2 items-center justify-center w-full px-4">
-            <Text className="text-3xl font-semibold text-center text-black/80 dark:text-gray-500">
+
+          {/* Welcome Section */}
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              paddingHorizontal: 24,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 28,
+                fontWeight: "600",
+                textAlign: "center",
+                color: theme.text,
+                marginBottom: 16,
+              }}
+            >
               {t("welcome_to_careflow")}
             </Text>
-            <Text className="text-md font-semibold text-center text-black/80 dark:text-gray-500 mt-4">
+
+            <Text
+              style={{
+                fontSize: 16,
+                textAlign: "center",
+                color: theme.text,
+                opacity: 0.7,
+              }}
+            >
               {t("welcome_to_careflow_description")}
             </Text>
           </View>
-          <View className="flex-1 h-1/2 items-center justify-center w-full px-4">
-            <Text className="text-xl font-semibold text-center text-black/80 dark:text-gray-500">
+
+          {/* Authentication Section */}
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              paddingHorizontal: 24,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "600",
+                textAlign: "center",
+                color: theme.text,
+                marginBottom: 20,
+              }}
+            >
               {t("authentication_with")}
             </Text>
+
+            {/* ID Card Button */}
             <Pressable
               onPress={handleIdCardPage}
-              className="flex items-center justify-center w-full bg-blue-500 h-[56px] rounded-[24px] mt-4"
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+                width: "100%",
+                backgroundColor: theme.primary,
+                height: 56,
+                borderRadius: 24,
+              }}
             >
-              <Text className="text-white text-md">{t("id_card")}</Text>
+              <Text style={{ color: "#fff", fontSize: 16 }}>
+                {t("id_card")}
+              </Text>
             </Pressable>
+
+            {/* Face Recognition Button */}
             <Pressable
               onPress={handleFaceRecognitionPage}
-              className="flex items-center justify-center w-full bg-white border-2 border-blue-500 h-[56px] rounded-[24px] mt-6"
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+                width: "100%",
+                backgroundColor: theme.card,
+                borderWidth: 2,
+                borderColor: theme.primary,
+                height: 56,
+                borderRadius: 24,
+                marginTop: 20,
+              }}
             >
-              <Text className="text-blue-500 text-md">{t("face_recognition")}</Text>
-            </Pressable>
-            <View className="flex flex-row items-center justify-center w-full gap-2 mt-4">
-              <Text className="text-md font-semibold text-center text-black/80 dark:text-gray-500">
-                {t("don_t_have_an_account")}
+              <Text
+                style={{
+                  color: theme.primary,
+                  fontSize: 16,
+                }}
+              >
+                {t("face_recognition")}
               </Text>
+            </Pressable>
+
+            {/* Sign Up */}
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+                marginTop: 20,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: theme.text,
+                  opacity: 0.7,
+                }}
+              >
+                {t("don_t_have_an_account")}{" "}
+              </Text>
+
               <Pressable onPress={handleSignUpPage}>
-                <Text className="text-blue-500">{t("sign_up")}</Text>
+                <Text
+                  style={{
+                    color: theme.primary,
+                    fontWeight: "600",
+                  }}
+                >
+                  {t("sign_up")}
+                </Text>
               </Pressable>
             </View>
           </View>
         </View>
       )}
+
+      {/* ID Card Page */}
       {statePage === "idCard" && (
-        <View className="flex-1 w-full h-full px-4">
-          <View className="flex flex-row w-full py-4 pb-6 justify-between items-center">
-            <Pressable
-              className=" flex-row items-center justify-start px-3 rounded-full"
-              onPress={() => {
-                handleBack();
-              }}
-            >
+        <View
+          style={{
+            flex: 1,
+            paddingHorizontal: 16,
+            backgroundColor: theme.background,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              paddingVertical: 16,
+              justifyContent: "space-between",
+            }}
+          >
+            <Pressable onPress={handleBack}>
               <FontAwesome
                 name="angle-left"
                 size={36}
-                className=" text-black dark:text-white"
-                color={colorScheme === "dark" ? "#fff" : "#000"}
+                color={theme.icon}
               />
             </Pressable>
-            <Text className="text-xl font-semibold text-center text-black/80 dark:text-gray-500">
+
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: "600",
+                color: theme.text,
+              }}
+            >
               {t("login_with_id_card")}
             </Text>
-            <View className="w-[36px]" />
+
+            <View style={{ width: 36 }} />
           </View>
+
           <LoginCardComp />
         </View>
       )}
+
+      {/* Face Recognition Page */}
       {statePage === "faceRecognition" && (
-        <View className="flex-1 w-full h-full">
-          <View className="flex w-full py-4 justify-start items-start">
-            <Pressable
-              className="flex-row items-center justify-start px-3 rounded-full"
-              onPress={() => {
-                handleBack();
-              }}
-            >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: theme.background,
+          }}
+        >
+          <View
+            style={{
+              paddingVertical: 16,
+              paddingHorizontal: 16,
+            }}
+          >
+            <Pressable onPress={handleBack}>
               <FontAwesome
                 name="angle-left"
                 size={36}
-                className=" text-black dark:text-white"
-                color={colorScheme === "dark" ? "#fff" : "#000"}
+                color={theme.icon}
               />
             </Pressable>
           </View>
+
           <LoginFaceComp />
         </View>
       )}

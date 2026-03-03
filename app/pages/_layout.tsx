@@ -4,6 +4,7 @@
 import Provider from "@/services/providerService";
 import { clearConsultResume, setConsultResume } from "@/store/recall";
 import { CaseResumePayload } from "@/types/DoctorConsultModel";
+import { useTranslation } from "react-i18next";
 import {
     closeSocket,
     getSocket,
@@ -20,6 +21,7 @@ export default function MainLayout() {
     const dispatch = useDispatch();
     const token = Provider.Token;
     const colorScheme = useColorScheme();
+    const { t } = useTranslation();
 
     useEffect(() => {
         console.log("token", token);
@@ -36,22 +38,22 @@ export default function MainLayout() {
                     dispatch(setConsultResume(data));
                 },
                 "force-logout": () => {
-                    Alert.alert(
-                        "ออกจากระบบ",
-                        "บัญชีของคุณถูกออกจากระบบจากอุปกรณ์อื่น",
-                        [
-                            {
-                                text: "ตกลง",
-                                onPress: async () => {
-                                    closeSocket();
-                                    Provider.setProfile(null);
-                                    Provider.setToken("");
-                                    router.replace("/");
-                                },
-                            },
-                        ]
-                    );
+    Alert.alert(
+        t("logout_title"),
+        t("logout_message_other_device"),
+        [
+            {
+                text: t("ok"),
+                onPress: async () => {
+                    closeSocket();
+                    Provider.setProfile(null);
+                    Provider.setToken("");
+                    router.replace("/");
                 },
+            },
+        ]
+    );
+},
 
             });
 

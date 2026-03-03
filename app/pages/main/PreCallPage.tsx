@@ -36,15 +36,23 @@ const PreCallPage: React.FC = () => {
     const micGranted = settings.audio
       ? await PermissionService.requestMicrophonePermission()
       : true;
-    if (!camGranted || !micGranted) {
-      Alert.alert("กรุณาอนุญาตกล้องและไมโครโฟน");
-      return;
-    }
-    const stream = await getLocalStream(settings.video, settings.audio);
-    if (!stream) {
-      Alert.alert("ไม่สามารถเข้าถึงกล้อง/ไมโครโฟน");
-      return;
-    }
+if (!camGranted || !micGranted) {
+  Alert.alert(
+    t("permission_required_title"),
+    t("permission_camera_microphone")
+  );
+  return;
+}
+
+const stream = await getLocalStream(settings.video, settings.audio);
+
+if (!stream) {
+  Alert.alert(
+    t("media_access_error_title"),
+    t("media_access_error_message")
+  );
+  return;
+}
     console.log("Local stream tracks:", stream.getTracks().map(t => t.kind));
     setLocalStream(stream);
   };
@@ -60,21 +68,25 @@ const PreCallPage: React.FC = () => {
     const cleanup = listenSocket({
 
       "case:ended": ({ caseId, endedBy }: { caseId: string; endedBy: string }) => {
-        Alert.alert("คุณถูกสิ้นสุดการสัมภาษณ์", "คุณถูกสิ้นสุดการสัมภาษณ์", [
-          {
-            text: "ตกลง",
-            onPress: () => {
-              router.replace({
-                pathname: "/pages/main/ConsultSuccessPage",
-                params: {
-                  consult_id: caseId,
-                  userName: "",
+    Alert.alert(
+        t("consult_ended_title"),
+        t("consult_ended_message"),
+        [
+            {
+                text: t("ok"),
+                onPress: () => {
+                    router.replace({
+                        pathname: "/pages/main/ConsultSuccessPage",
+                        params: {
+                            consult_id: caseId,
+                            userName: "",
+                        },
+                    });
                 },
-              });
             },
-          },
-        ]);
-      },
+        ]
+    );
+},
 
     });
 
@@ -112,7 +124,7 @@ const PreCallPage: React.FC = () => {
                     </Text>
                   </View>
                 )}
-                <Text className="text-white text-xl font-medium">คุณ</Text>
+                {/* <Text className="text-white text-xl font-medium">คุณ</Text> */}
               </View>
             )}
           </View>

@@ -152,7 +152,7 @@ const RegisterPage = () => {
         month: "long",
         day: "numeric",
       })
-    : "กดเพื่อเลือกวันเกิด";
+    : t("select_birthday");
 
   // ─── อ่านบัตรประชาชน ──────────────────────────────────────────────
   const readSmartcard = async () => {
@@ -175,20 +175,13 @@ const RegisterPage = () => {
         setUnknownBirthday(parsed.year === "0000");
       }
 
-      Alert.alert(t("notification"), "อ่านข้อมูลบัตรสำเร็จ");
+      Alert.alert(t("notification"), t("card_read_success"));
     } catch (e) {
-      Alert.alert(t("notification"), "กรุณาเสียบบัตรประชาชน");
+      Alert.alert(t("notification"), t("please_insert_card"));
     } finally {
       isReadingRef.current = false;
       setCardLoading(false);
     }
-  };
-
-  const handleInputCard = () => {
-    console.log(55555555555555555555555555555555555555555555555555555555);
-
-    isReadingRef.current = false;
-    readSmartcard();
   };
 
   useEffect(() => {
@@ -364,9 +357,9 @@ const RegisterPage = () => {
                 </Text>
                 {/* Toggle ไม่ทราบวันเกิด */}
                 <View className="flex-row items-center gap-2">
-                  <Text className="text-sm text-gray-500 dark:text-gray-400">
-                    ไม่ทราบ
-                  </Text>
+<Text className="text-sm text-gray-500 dark:text-gray-400">
+  {t("unknown")}
+</Text>
                   <Switch
                     value={unknownBirthday}
                     onValueChange={(v) => {
@@ -385,9 +378,9 @@ const RegisterPage = () => {
               {unknownBirthday ? (
                 /* แสดง box สีเทาแทนเมื่อไม่ทราบวันเกิด */
                 <View className="h-[56px] mb-[4px] rounded-[24px] border-[1px] border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 justify-center px-4">
-                  <Text className="text-gray-400 dark:text-gray-500">
-                    ไม่ทราบวันเกิด (จะส่งเป็น 0000-00-00)
-                  </Text>
+<Text className="text-gray-400 dark:text-gray-500">
+  {t("unknown_birthday_hint")}
+</Text>
                 </View>
               ) : (
                 /* ปุ่มเลือกวัน → เปิด native DateTimePicker */
@@ -440,9 +433,9 @@ const RegisterPage = () => {
                       onPress={() => setShowDatePicker(false)}
                       className="items-end px-2 py-1"
                     >
-                      <Text className="text-[#2196F3] font-bold text-base">
-                        เสร็จสิ้น
-                      </Text>
+<Text className="text-[#2196F3] font-bold text-base">
+  {t("done")}
+</Text>
                     </TouchableOpacity>
                   )}
                 </View>

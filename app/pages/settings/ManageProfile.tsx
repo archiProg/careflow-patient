@@ -103,7 +103,7 @@ const ManageProfilePage = () => {
                 <View className="px-6 pb-6">
                     {/* Name Field */}
                     <Text className="text-md text-gray-600 mb-2 font-medium">
-                        ชื่อ-นามสกุล
+                         {t("full_name")}
                     </Text>
                     <View className="flex-row items-center bg-white rounded-xl px-4 py-3 border border-blue-100">
 
@@ -111,13 +111,13 @@ const ManageProfilePage = () => {
                             value={name}
                             onChangeText={setName}
                             className="flex-1 ml-3 text-gray-800 text-md"
-                            placeholder="กรอกชื่อ-นามสกุล"
+    placeholder={t("enter_full_name")}
                         />
                     </View>
 
                     {/* Email Field */}
                     <Text className="text-md text-gray-600 mb-2 font-medium mt-8">
-                        อีเมล
+    {t("email")}
                     </Text>
                     <View className="flex-row items-center bg-white rounded-xl px-4 py-3 border border-blue-100">
                         <TextInput
@@ -126,7 +126,7 @@ const ManageProfilePage = () => {
                             keyboardType="email-address"
                             autoCapitalize="none"
                             className="flex-1 ml-3 text-gray-800 text-md"
-                            placeholder="กรอกอีเมล"
+    placeholder={t("enter_email")}
                         />
                     </View>
                 </View>
@@ -139,7 +139,7 @@ const ManageProfilePage = () => {
                 className={`bg-blue-500 active:bg-blue-700 py-4 rounded-xl mb-4 mx-4 ${isDisable ? "opacity-50" : ""}`}
             >
                 <Text className="text-white text-base font-semibold text-center">
-                    บันทึกข้อมูล
+    {t("save")}
                 </Text>
             </TouchableOpacity>
 
