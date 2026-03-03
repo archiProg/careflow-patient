@@ -1,4 +1,4 @@
-import { registerApi } from "@/api/AuthApi";
+import { registerApi, checkIdCardApi } from "@/api/AuthApi";
 import { FaceCaptureCamera } from "@/components/FaceCaptureCameraProps";
 import Loading from "@/components/LoadingComp";
 import { BG } from "@/constants/styles";
@@ -198,20 +198,43 @@ const RegisterPage = () => {
   }, []);
 
   // ─── Validate & Next ───────────────────────────────────────────────
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     if (!name.trim()) {
-      Alert.alert(t("notification"), t("register_validation_name"));
+      Alert.alert(t("notification"), t("register_validation_name"));      
       return;
     }
+
     if (!iDCard.trim()) {
       Alert.alert(t("notification"), t("register_validation_id_card"));
       return;
     }
+
     if (!gender || gender === 0) {
       Alert.alert(t("notification"), t("register_validation_gender"));
       return;
     }
-    setStep(STEP_FACE);
+
+    setIsLoading(true);
+
+    try {
+      const response = await checkIdCardApi(iDCard);
+      console.log("checkIdCardApi" , response);
+      
+      if (response.success) {
+        // บัตรใช้ได้
+        setStep(STEP_FACE);
+      } else {
+        const errorRes = JSON.parse(response.response);
+        Alert.alert(
+          t("notification"),
+          i18n.language === "th" ? errorRes.th : errorRes.en,
+        );
+      }
+    } catch (err) {
+      Alert.alert(t("notification"), "Server error");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // ─── Submit ────────────────────────────────────────────────────────
@@ -357,9 +380,9 @@ const RegisterPage = () => {
                 </Text>
                 {/* Toggle ไม่ทราบวันเกิด */}
                 <View className="flex-row items-center gap-2">
-<Text className="text-sm text-gray-500 dark:text-gray-400">
-  {t("unknown")}
-</Text>
+                  <Text className="text-sm text-gray-500 dark:text-gray-400">
+                    {t("unknown")}
+                  </Text>
                   <Switch
                     value={unknownBirthday}
                     onValueChange={(v) => {
@@ -378,9 +401,9 @@ const RegisterPage = () => {
               {unknownBirthday ? (
                 /* แสดง box สีเทาแทนเมื่อไม่ทราบวันเกิด */
                 <View className="h-[56px] mb-[4px] rounded-[24px] border-[1px] border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 justify-center px-4">
-<Text className="text-gray-400 dark:text-gray-500">
-  {t("unknown_birthday_hint")}
-</Text>
+                  <Text className="text-gray-400 dark:text-gray-500">
+                    {t("unknown_birthday_hint")}
+                  </Text>
                 </View>
               ) : (
                 /* ปุ่มเลือกวัน → เปิด native DateTimePicker */
@@ -433,9 +456,9 @@ const RegisterPage = () => {
                       onPress={() => setShowDatePicker(false)}
                       className="items-end px-2 py-1"
                     >
-<Text className="text-[#2196F3] font-bold text-base">
-  {t("done")}
-</Text>
+                      <Text className="text-[#2196F3] font-bold text-base">
+                        {t("done")}
+                      </Text>
                     </TouchableOpacity>
                   )}
                 </View>

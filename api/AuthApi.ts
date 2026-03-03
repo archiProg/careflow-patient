@@ -24,3 +24,6 @@ export const registerApi = (payload: RegisterPayloadModel) =>
 
 export const checkEmailApi = (payload: { email: string }) =>
   postApi("/check-email", JSON.stringify(payload));
+
+export const checkIdCardApi = (id_card: string) =>
+  postApi("/check-idcard",JSON.stringify({ id_card }));
