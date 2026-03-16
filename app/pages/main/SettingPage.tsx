@@ -120,13 +120,7 @@ export default function SettingPage() {
                             </View>
                             <FontAwesome name="chevron-right" size={16} color="#9CA3AF" />
                         </Pressable>
-                        <Pressable className="flex-row items-center justify-between px-6 py-4" onPress={() => router.push("/pages/settings/ChangePasswordPage")}>
-                            <View className="flex-row items-center">
-                                <FontAwesome name="lock" size={20} color="#6B7280" />
-                                <Text className="ml-4 text-gray-800 dark:text-white">{t('change-password')}</Text>
-                            </View>
-                            <FontAwesome name="chevron-right" size={16} color="#9CA3AF" />
-                        </Pressable>
+ 
                     </View>
                 </View>
 
