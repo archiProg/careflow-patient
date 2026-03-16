@@ -1,4 +1,4 @@
-import { registerApi, checkIdCardApi } from "@/api/AuthApi";
+import { registerApi } from "@/api/AuthApi";
 import { FaceCaptureCamera } from "@/components/FaceCaptureCameraProps";
 import Loading from "@/components/LoadingComp";
 import { BG } from "@/constants/styles";
@@ -26,7 +26,7 @@ import {
   TextInput,
   TouchableOpacity,
   useColorScheme,
-  View,
+  View
 } from "react-native";
 const isReadingRef = useRef(false);
 
@@ -108,10 +108,12 @@ const parseGender = (gender: string): number => {
 const STEP_FILL = 1;
 const STEP_FACE = 2;
 
+
 const { SmartcardModule } = NativeModules;
 const smartcardEmitter = useRef(
-  new NativeEventEmitter(NativeModules.SmartcardModule),
+  new NativeEventEmitter(NativeModules.SmartcardModule)
 ).current;
+
 
 // ─── RegisterPage ────────────────────────────────────────────────────
 const RegisterPage = () => {
@@ -148,10 +150,10 @@ const RegisterPage = () => {
   const hasPickedDate = birthday.year !== "0000";
   const displayDate = hasPickedDate
     ? dateValue.toLocaleDateString("th-TH", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
     : t("select_birthday");
 
   // ─── อ่านบัตรประชาชน ──────────────────────────────────────────────
@@ -184,57 +186,22 @@ const RegisterPage = () => {
     }
   };
 
-  useEffect(() => {
-    const cardInsertListener = smartcardEmitter.addListener(
-      "CARD_INSERTED",
-      () => {
-        readSmartcard();
-      },
-    );
-
-    return () => {
-      cardInsertListener.remove();
-    };
-  }, []);
 
   // ─── Validate & Next ───────────────────────────────────────────────
   const handleNextStep = async () => {
     if (!name.trim()) {
-      Alert.alert(t("notification"), t("register_validation_name"));      
+      Alert.alert(t("notification"), t("register_validation_name"));
       return;
     }
-
     if (!iDCard.trim()) {
       Alert.alert(t("notification"), t("register_validation_id_card"));
       return;
     }
-
     if (!gender || gender === 0) {
       Alert.alert(t("notification"), t("register_validation_gender"));
       return;
     }
-
-    setIsLoading(true);
-
-    try {
-      const response = await checkIdCardApi(iDCard);
-      console.log("checkIdCardApi" , response);
-      
-      if (response.success) {
-        // บัตรใช้ได้
-        setStep(STEP_FACE);
-      } else {
-        const errorRes = JSON.parse(response.response);
-        Alert.alert(
-          t("notification"),
-          i18n.language === "th" ? errorRes.th : errorRes.en,
-        );
-      }
-    } catch (err) {
-      Alert.alert(t("notification"), "Server error");
-    } finally {
-      setIsLoading(false);
-    }
+    setStep(STEP_FACE);
   };
 
   // ─── Submit ────────────────────────────────────────────────────────
@@ -339,8 +306,8 @@ const RegisterPage = () => {
               keyboardShouldPersistTaps="handled"
             >
               {/* ── ปุ่มอ่านบัตร ── */}
-              {/* <TouchableOpacity
-                onPress={handleInputCard}
+              <TouchableOpacity
+                onPress={readSmartcard}
                 disabled={cardLoading}
                 className="h-[56px] mb-[24px] rounded-[24px] bg-[#2196F3] items-center justify-center flex-row gap-3"
               >
@@ -348,7 +315,7 @@ const RegisterPage = () => {
                 <Text className="text-white font-bold text-base">
                   {cardLoading ? "กำลังอ่านบัตร..." : "อ่านบัตรประชาชน"}
                 </Text>
-              </TouchableOpacity> */}
+              </TouchableOpacity>
 
               {/* ── ชื่อ ── */}
               <Text className="text-lg font-bold text-black mb-[8px] dark:text-white">
